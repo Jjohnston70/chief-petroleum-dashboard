@@ -242,6 +242,9 @@ class ChiefDashboard {
     // Set default date to 2 business days ago (skipping weekends)
     const defaultRecapDate = this.getBusinessDaysAgo(2);
     document.getElementById('recap-date').value = defaultRecapDate;
+
+    // Try to find a date with actual data if the default doesn't work
+    this.setDefaultRecapDateWithData();
   }
 
   /**
@@ -1964,8 +1967,12 @@ class ChiefDashboard {
       const dailyData = await this.dataService.getDailyRecap(selectedDate);
 
       if (!dailyData) {
-        this.showNotification(`No data found for ${selectedDate}`, 'info');
+        console.log(`📅 No data found for ${selectedDate}, trying to find alternative date`);
+        this.showNotification(`No data found for ${selectedDate}. Try selecting a different date.`, 'info');
         this.hideDailyRecap();
+
+        // Suggest alternative dates with data
+        this.suggestAlternativeRecapDates();
         return;
       }
 
@@ -1974,7 +1981,36 @@ class ChiefDashboard {
 
     } catch (error) {
       console.error('❌ Error loading daily recap:', error);
-      this.showNotification('Failed to load daily recap', 'error');
+      this.showNotification(`Failed to load daily recap: ${error.message}`, 'error');
+    }
+  }
+
+  /**
+   * Suggest alternative dates that might have recap data
+   */
+  async suggestAlternativeRecapDates() {
+    try {
+      const suggestions = [];
+
+      // Check the last 7 business days
+      for (let i = 1; i <= 7; i++) {
+        const testDate = this.getBusinessDaysAgo(i);
+        const hasData = await this.dataService.getDailyRecap(testDate);
+
+        if (hasData) {
+          suggestions.push(testDate);
+        }
+
+        // Only suggest up to 3 dates
+        if (suggestions.length >= 3) break;
+      }
+
+      if (suggestions.length > 0) {
+        console.log('📅 Suggested dates with data:', suggestions);
+        this.showNotification(`Try these dates: ${suggestions.join(', ')}`, 'info');
+      }
+    } catch (error) {
+      console.log('📅 Could not suggest alternative dates');
     }
   }
 
@@ -2354,6 +2390,29 @@ class ChiefDashboard {
     }
 
     return currentDate.toISOString().split('T')[0];
+  }
+
+  /**
+   * Try to set a default recap date that has actual data
+   */
+  async setDefaultRecapDateWithData() {
+    if (!this.dataService) return;
+
+    try {
+      // Try the last 10 business days to find one with data
+      for (let i = 1; i <= 10; i++) {
+        const testDate = this.getBusinessDaysAgo(i);
+        const hasData = await this.dataService.getDailyRecap(testDate);
+
+        if (hasData) {
+          document.getElementById('recap-date').value = testDate;
+          console.log(`📅 Found data for ${testDate}, setting as default recap date`);
+          break;
+        }
+      }
+    } catch (error) {
+      console.log('📅 Could not find recent date with recap data, keeping default');
+    }
   }
 
   /**
