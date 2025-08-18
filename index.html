@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chief Petroleum - Fuel Business Dashboard</title>
+    <meta name="description" content="Chief Petroleum fuel business analytics dashboard with real-time data">
+    <meta name="theme-color" content="#0077cc">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body class="chief-dark-theme" id="app-body">
+    <!-- Header Section -->
+    <header class="dashboard-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <img src="Chief_Logo.png" alt="Chief Petroleum" class="company-logo" id="company-logo">
+                <div class="company-info">
+                    <h1>Chief Petroleum</h1>
+                    <p>Fuel Business Dashboard</p>
+                </div>
+            </div>
+
+            <!-- Navigation Dropdown Menu -->
+            <div class="nav-dropdown-container">
+                <button class="nav-dropdown-btn" id="nav-dropdown-btn" title="Access Other Dashboards">
+                    <i class="fas fa-th-large"></i>
+                    <span>Dashboards</span>
+                    <i class="fas fa-chevron-down nav-arrow"></i>
+                </button>
+                <div class="nav-dropdown-menu" id="nav-dropdown-menu">
+                    <div class="nav-dropdown-header">
+                        <h4>Chief Petroleum Dashboards</h4>
+                    </div>
+                    <div class="nav-dropdown-content">
+                        <!-- Fleet & Operations -->
+                        <div class="nav-section">
+                            <h5>Fleet & Operations</h5>
+                            <a href="https://chief-fleet-frontend.vercel.app/index.html" target="_blank" class="nav-link">
+                                <i class="fas fa-truck"></i>
+                                <span>Fleet Medic</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="https://chief-petroleum-dashboard-production.up.railway.app/" target="_blank" class="nav-link">
+                                <i class="fas fa-dollar-sign"></i>
+                                <span>Chief Pricing</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+
+                        <!-- Supplier Management -->
+                        <div class="nav-section">
+                            <h5>Supplier Management</h5>
+                            <a href="https://chiefnavigator.web.app/supplier-dashboard" target="_blank" class="nav-link">
+                                <i class="fas fa-industry"></i>
+                                <span>Supplier Dashboard 4.0</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="https://docs.google.com/spreadsheets/d/1emUUsFOnlJd0fDD8_SYyOVEtEQgHtoHJ6A34mhULERg/edit?gid=439549570#gid=439549570" target="_blank" class="nav-link">
+                                <i class="fas fa-table"></i>
+                                <span>GoogleSheet Supplier Dashboard 4.0</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+
+                        <!-- Analytics & Reporting -->
+                        <div class="nav-section">
+                            <h5>Analytics & Reporting</h5>
+                            <a href="https://lookerstudio.google.com/u/0/reporting/6c94fa81-d593-436e-a87a-8f4fcbc4afd4/page/p_e6snx2n1md" target="_blank" class="nav-link">
+                                <i class="fas fa-cloud-sun"></i>
+                                <span>Weather</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="https://lookerstudio.google.com/u/0/reporting/056e6a3b-e94b-49e3-ac2c-4c77e86edfcc/page/p_2v5iwpvdnd" target="_blank" class="nav-link">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Chief Website Analytics</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+
+                        <!-- Logistics & Delivery -->
+                        <div class="nav-section">
+                            <h5>Logistics & Delivery</h5>
+                            <a href="https://www.google.com/maps/d/u/0/viewer?mid=1l1fHKTPq6crir0gOHltKUY3Vz_yKgd8&femb=1&ll=38.609390361625984%2C-102.17655080738773&z=7" target="_blank" class="nav-link">
+                                <i class="fas fa-map-marked-alt"></i>
+                                <span>TW Deliveries and Zones</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="https://chiefnavigator.web.app/send-driver-email" target="_blank" class="nav-link">
+                                <i class="fas fa-envelope"></i>
+                                <span>Send Email to TW Drivers</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+
+                        <!-- Sales & Customer Management -->
+                        <div class="nav-section">
+                            <h5>Sales & Customer Management</h5>
+                            <a href="https://trello.com/b/r96TxSSe/chief-petroleum-tanks" target="_blank" class="nav-link">
+                                <i class="fas fa-clipboard-list"></i>
+                                <span>Sales (Trello)</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="https://script.google.com/a/macros/chiefpetroleum.com/s/AKfycbxPtjHd0PMYi0Y-ITc4XzUORcdgOvlPJAPdPHaZimSG3S2p4ymVFimBBDepv0tT4v4q/exec" target="_blank" class="nav-link">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Customer Onboarding</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            <a href="https://trello.com/b/HiuL283M/chief-sales-and-customer-onboarding-process" target="_blank" class="nav-link">
+                                <i class="fas fa-users"></i>
+                                <span>Trello Customer Onboarding</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+
+                        <!-- Scheduling & Communication -->
+                        <div class="nav-section">
+                            <h5>Scheduling & Communication</h5>
+                            <a href="https://script.google.com/a/macros/chiefpetroleum.com/s/AKfycbwBX3AXKobMfZt23IiZN8YhuiDuHspLhWgN5pQlUNMjzOQ4dBPqyu5XPgUqeCOhdftw/exec" target="_blank" class="nav-link">
+                                <i class="fas fa-calendar-check"></i>
+                                <span>Schedule Reminders</span>
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="header-controls">
+                <!-- Data Management Section -->
+                <div class="data-management-section">
+                    <!-- CSV Upload Section -->
+                    <div class="csv-upload-container">
+                        <div class="csv-upload-section">
+                            <label for="csv-file" class="csv-upload-label">
+                                <i class="fas fa-upload"></i>
+                                📁 Upload CSV Data:
+                                <span class="filter-description">Upload your fuel data CSV files (Data, Recap-data, Data-gp-2024, Data-gp-2025)</span>
+                            </label>
+                            <input type="file" id="csv-file" accept=".csv" class="csv-input" title="Select CSV file to upload">
+                            <input type="text" id="dataset-name" class="dataset-name-input" placeholder="Dataset name (e.g., Data, Recap-data)" title="Enter a name for this dataset">
+                            <button id="upload-csv" class="upload-csv-btn" title="Upload and Process CSV File">
+                                <i class="fas fa-cloud-upload-alt"></i>
+                                Upload CSV
+                            </button>
+                        </div>
+
+                        <div class="dataset-switcher" id="dataset-switcher" style="display: none;">
+                            <label for="active-dataset" class="dataset-label">
+                                <i class="fas fa-database"></i>
+                                📊 Active Dataset:
+                            </label>
+                            <select id="active-dataset" class="dataset-select" title="Switch between uploaded datasets">
+                                <option value="">Select Dataset...</option>
+                            </select>
+                            <span class="dataset-info" id="dataset-info">No datasets uploaded</span>
+                        </div>
+                    </div>
+
+                    <!-- Data Source Selector -->
+                    <div class="sheet-selector-container">
+                        <label for="sheet-selector" class="sheet-label">
+                            <i class="fas fa-table"></i>
+                            Data Source:
+                        </label>
+                        <select id="sheet-selector" class="sheet-selector" title="Select Data Source">
+                            <option value="Data">Current Data</option>
+                            <option value="Data-gp-2025">2025 Data</option>
+                            <option value="Data-gp-2024">2024 Data</option>
+                            <option value="Recap-data">Summary Data</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Filters Section -->
+                <div class="filters-section">
+                    <div class="date-range-container">
+                        <label for="date-from" class="date-label">
+                            <i class="fas fa-calendar"></i>
+                            📊 Main Date Filter:
+                            <span class="filter-description">Filters ALL charts and data across the entire dashboard</span>
+                        </label>
+                        <input type="date" id="date-from" class="date-input" title="Start Date - Filters all dashboard data from this date">
+                        <span class="date-separator">to</span>
+                        <input type="date" id="date-to" class="date-input" title="End Date - Filters all dashboard data up to this date">
+                        <button id="apply-date-filter" class="apply-filter-btn" title="Apply Date Filter to All Charts and KPIs">
+                            <i class="fas fa-filter"></i>
+                            Apply Filter
+                        </button>
+                        <button id="clear-date-filter" class="clear-filter-btn" title="Remove Date Filter and Show All Data">
+                            <i class="fas fa-times"></i>
+                            Clear Filter
+                        </button>
+                        <div class="filter-help-toggle">
+                            <button id="filter-help-btn" class="help-btn" title="Show help about date selectors">
+                                <i class="fas fa-question-circle"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Help Panel -->
+                <div id="filter-help-panel" class="filter-help-panel" style="display: none;">
+                    <div class="help-content">
+                        <h4>📅 Date Selector Guide</h4>
+                        <div class="help-items">
+                            <div class="help-item">
+                                <strong>📊 Main Date Filter (Above):</strong>
+                                <p>Filters ALL data across the entire dashboard - KPIs, charts, and tables. Use this to focus on a specific time period.</p>
+                            </div>
+                            <div class="help-item">
+                                <strong>📅 Daily Recap Date (Below):</strong>
+                                <p>Shows detailed breakdown for ONE specific day only. Independent of the main filter.</p>
+                            </div>
+                            <div class="help-item">
+                                <strong>📈 Chart Period Selectors:</strong>
+                                <p>Changes how data is grouped in trend charts (daily/weekly/monthly). Does NOT filter data.</p>
+                            </div>
+                        </div>
+                        <button id="close-help-btn" class="close-help-btn">Got it!</button>
+                    </div>
+                </div>
+                <!-- Actions Section -->
+                <div class="actions-section">
+                    <button class="theme-toggle" id="theme-toggle" title="Toggle Theme">
+                        <i class="fas fa-moon" id="theme-icon"></i>
+                    </button>
+                    <button class="data-source-toggle" id="data-source-toggle" title="Switch to Google Sheets data">
+                        📊 Use Google Sheets
+                    </button>
+                    <button class="refresh-btn" id="refresh-btn" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                    <button class="test-btn" id="test-btn" title="Run Dashboard Tests" style="display: none;">
+                        <i class="fas fa-vial"></i>
+                    </button>
+                </div>
+
+                <!-- Status Section -->
+                <div class="status-section">
+                    <div class="last-updated" id="last-updated">
+                        Last updated: <span id="update-time">Loading...</span>
+                        <div class="data-range-info" id="data-range-info">
+                            <span class="range-label">Data Range:</span> <span id="data-range">Loading...</span>
+                        </div>
+                        <div class="data-source-info" id="data-source-info">
+                            <span class="range-label">Data Source:</span> <span id="data-source">Google Sheets</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Dashboard Content -->
+    <main class="dashboard-main">
+        <!-- KPI Cards Section -->
+        <section class="kpi-section">
+            <div class="kpi-grid">
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Total Sales</h3>
+                        <div class="kpi-value" id="total-sales">$0.00</div>
+                        <div class="kpi-change" id="sales-change">+0.0%</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Gallons Sold</h3>
+                        <div class="kpi-value" id="total-gallons">0</div>
+                        <div class="kpi-change" id="gallons-change">+0.0%</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Profit Margin</h3>
+                        <div class="kpi-value" id="profit-margin">0.0%</div>
+                        <div class="kpi-change" id="margin-change">+0.0%</div>
+                    </div>
+                </div>
+
+                <div class="kpi-card">
+                    <div class="kpi-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="kpi-content">
+                        <h3>Active Customers</h3>
+                        <div class="kpi-value" id="active-customers">0</div>
+                        <div class="kpi-change" id="customers-change">+0.0%</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <!-- Sales Trend Chart - Full Width -->
+            <div class="chart-container chart-full-width">
+                <div class="chart-header">
+                    <h3>Sales Trend</h3>
+                    <div class="chart-controls">
+                        <select id="sales-period" class="period-selector" title="Change chart time grouping">
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly" selected>Monthly</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="chart-content">
+                    <canvas id="sales-chart"></canvas>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+
+                <!-- Product Distribution Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Fuel Type Distribution</h3>
+                        <div class="chart-controls">
+                            <div class="chart-info">
+                                <i class="fas fa-info-circle chart-info-icon" title="Fuel Type Distribution: Displays the percentage breakdown of different fuel types sold by volume (gallons). Shows which products are most popular and helps with inventory planning."></i>
+                            </div>
+                            <select id="product-filter" class="chart-selector" title="Filter by product type">
+                                <option value="all">All Products</option>
+                                <option value="diesel">Diesel Only</option>
+                                <option value="gasoline">Gasoline Only</option>
+                                <option value="heating">Heating Oil Only</option>
+                                <option value="other">Other Products</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="product-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Customer Performance Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Top Customer Performance</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle chart-info-icon" title="Top Customer Performance: Ranks customers by total sales revenue and transaction volume. Helps identify your most valuable customers and potential growth opportunities."></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="customer-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Profit Analysis Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Profit vs Sales Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle chart-info-icon" title="Profit vs Sales Analysis: Scatter plot showing the relationship between sales volume and profit margins. Each point represents a time period - helps identify optimal pricing strategies."></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="profit-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Year-over-Year Comparison (Advanced Charts) -->
+                <div class="chart-container" id="year-comparison-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Year-over-Year Comparison</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Comparing 2024 vs 2025 performance"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="year-comparison-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Growth Rate Chart -->
+                <div class="chart-container" id="growth-rate-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Monthly Growth Rate</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Month-over-month growth percentage"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="growth-rate-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Cumulative Performance -->
+                <div class="chart-container" id="cumulative-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Cumulative Performance</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Running totals over time"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="cumulative-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Historical Trend Analysis -->
+                <div class="chart-container" id="historical-trend-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Historical Trend Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Long-term trend analysis"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="historical-trend-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Seasonal Pattern Analysis -->
+                <div class="chart-container" id="seasonal-pattern-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Seasonal Pattern Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Seasonal trends and patterns"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="seasonal-pattern-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Customer Retention Analysis -->
+                <div class="chart-container" id="customer-retention-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Customer Retention Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Customer frequency and retention metrics"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="customer-retention-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Monthly Growth Chart -->
+                <div class="chart-container" id="monthly-growth-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Monthly Growth Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Monthly performance growth"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="monthly-growth-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- GP Time Series Charts Section -->
+        <section class="gp-charts-section">
+            <div class="section-header">
+                <h2>📈 GP Data Time Series Analysis</h2>
+                <p>Historical trends from Data-gp-2024 and Data-gp-2025 sheets</p>
+            </div>
+            <div class="gp-charts-grid">
+                <!-- GP Comparison Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>2024 vs 2025 GP Comparison</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Year-over-year GP data comparison"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="gp-comparison-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- GP Timeline Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>GP Timeline Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Historical GP performance timeline"></i>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="gp-timeline-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Daily Recap Section -->
+        <section class="daily-recap-section">
+            <div class="section-header">
+                <h2>Daily Recap</h2>
+                <div class="data-range-info" id="recap-data-range-info" style="margin-bottom: 1rem;">
+                    <span class="range-label">Recap Data Range:</span> <span id="recap-data-range">Loading...</span>
+                </div>
+                <div class="daily-recap-controls">
+                    <label for="recap-date" class="recap-date-label">
+                        <i class="fas fa-calendar-day"></i>
+                        📅 Daily Recap Date:
+                        <span class="filter-description">Shows detailed breakdown for ONE specific day only</span>
+                    </label>
+                    <input type="date" id="recap-date" class="recap-date-input" title="Select a specific date to view detailed daily breakdown">
+                    <button id="load-daily-recap" class="load-recap-btn" title="Load Daily Recap for Selected Date">
+                        <i class="fas fa-search"></i>
+                        Load Daily Recap
+                    </button>
+                </div>
+            </div>
+
+            <!-- Daily Metrics Grid -->
+            <div class="daily-metrics-grid" id="daily-metrics-grid" style="display: none;">
+                <div class="daily-metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-truck"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h4>Total Deliveries</h4>
+                        <div class="metric-value" id="daily-deliveries">0</div>
+                        <div class="metric-subtitle">transactions</div>
+                    </div>
+                </div>
+
+                <div class="daily-metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-dollar-sign"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h4>Total Sales</h4>
+                        <div class="metric-value" id="daily-sales">$0.00</div>
+                        <div class="metric-subtitle">revenue</div>
+                    </div>
+                </div>
+
+                <div class="daily-metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h4>Total Profit</h4>
+                        <div class="metric-value" id="daily-profit">$0.00</div>
+                        <div class="metric-subtitle">profit</div>
+                    </div>
+                </div>
+
+                <div class="daily-metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-gas-pump"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h4>Total Gallons</h4>
+                        <div class="metric-value" id="daily-gallons">0</div>
+                        <div class="metric-subtitle">gallons</div>
+                    </div>
+                </div>
+
+                <div class="daily-metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h4>Unique Customers</h4>
+                        <div class="metric-value" id="daily-customers">0</div>
+                        <div class="metric-subtitle">customers</div>
+                    </div>
+                </div>
+
+                <div class="daily-metric-card">
+                    <div class="metric-icon">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                    <div class="metric-content">
+                        <h4>Avg Profit Margin</h4>
+                        <div class="metric-value" id="daily-margin">0.0%</div>
+                        <div class="metric-subtitle">margin</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Product Breakdown Table -->
+            <div class="daily-product-breakdown" id="daily-product-breakdown" style="display: none;">
+                <h3>Product Breakdown</h3>
+                <div class="product-table-container">
+                    <table class="product-breakdown-table">
+                        <thead>
+                            <tr>
+                                <th>Product Type</th>
+                                <th>Gallons Sold</th>
+                                <th>Sales Revenue</th>
+                                <th>Profit</th>
+                                <th>Avg Price/Gal</th>
+                                <th>Deliveries</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-product-table-body">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Top Customers for the Day -->
+            <div class="daily-customers-breakdown" id="daily-customers-breakdown" style="display: none;">
+                <h3>Top Customers</h3>
+                <div class="customers-table-container">
+                    <table class="customers-breakdown-table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Deliveries</th>
+                                <th>Gallons</th>
+                                <th>Sales</th>
+                                <th>Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="daily-customers-table-body">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+
+
+        <!-- Charts Section -->
+        <section class="charts-section">
+            <div class="charts-grid">
+                <!-- Sales Trend Chart -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Sales Trend</h3>
+                        <div class="chart-controls">
+                            <label for="time-period" class="control-label">
+                                📈 Chart Period:
+                                <span class="filter-description">Changes time grouping for trend charts only</span>
+                            </label>
+                            <select id="time-period" class="time-selector" title="Select how to group data in trend charts (does not filter data)">
+                                <option value="daily">Daily View</option>
+                                <option value="weekly">Weekly View</option>
+                                <option value="monthly" selected>Monthly View</option>
+                            </select>
+                        </div>
+                    </div>
+                    <canvas id="sales-chart"></canvas>
+                </div>
+
+                <!-- Product Type Distribution -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Fuel Type Distribution</h3>
+                    </div>
+                    <canvas id="product-chart"></canvas>
+                </div>
+
+                <!-- Customer Performance -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Top Customers</h3>
+                    </div>
+                    <canvas id="customer-chart"></canvas>
+                </div>
+
+                <!-- Profit Analysis -->
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Profit vs Cost Analysis</h3>
+                    </div>
+                    <canvas id="profit-chart"></canvas>
+                </div>
+
+                <!-- Year-over-Year Comparison -->
+                <div class="chart-container" id="year-comparison-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Year-over-Year Comparison</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-info-circle" title="Comparing 2024 vs 2025 monthly performance"></i>
+                        </div>
+                    </div>
+                    <canvas id="year-comparison-chart"></canvas>
+                </div>
+
+                <!-- Growth Rate Analysis -->
+                <div class="chart-container" id="growth-rate-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Growth Rate Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-chart-line" title="Month-over-month growth trends"></i>
+                        </div>
+                    </div>
+                    <canvas id="growth-rate-chart"></canvas>
+                </div>
+
+                <!-- Cumulative Performance -->
+                <div class="chart-container" id="cumulative-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Cumulative Performance</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-chart-area" title="Running totals throughout the year"></i>
+                            <i class="fas fa-question-circle chart-help" title="Click for explanation" onclick="showChartExplanation('cumulative')"></i>
+                        </div>
+                    </div>
+                    <div class="chart-explanation" id="cumulative-explanation" style="display: none;">
+                        <p><strong>What this shows:</strong> Running totals of your business performance over time</p>
+                        <ul>
+                            <li><strong>Cumulative Sales:</strong> Total revenue accumulated from start of period to each date</li>
+                            <li><strong>Cumulative Volume:</strong> Total gallons delivered from start of period to each date</li>
+                            <li><strong>Growth Trajectory:</strong> Shows if you're accelerating or slowing down</li>
+                            <li><strong>Goal Tracking:</strong> Compare actual cumulative performance vs. targets</li>
+                        </ul>
+                        <p><em>Use this to track progress toward annual goals and identify performance trends.</em></p>
+                    </div>
+                    <canvas id="cumulative-chart"></canvas>
+                </div>
+
+                <!-- Historical Trend Analysis -->
+                <div class="chart-container" id="historical-trend-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Historical Trend Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-history" title="Long-term patterns across all data"></i>
+                        </div>
+                    </div>
+                    <canvas id="historical-trend-chart"></canvas>
+                </div>
+
+                <!-- Seasonal Pattern Analysis -->
+                <div class="chart-container" id="seasonal-pattern-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Seasonal Pattern Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-calendar-alt" title="Seasonal trends in fuel sales"></i>
+                        </div>
+                    </div>
+                    <canvas id="seasonal-pattern-chart"></canvas>
+                </div>
+
+                <!-- Customer Retention Analysis -->
+                <div class="chart-container" id="customer-retention-container" style="display: none;">
+                    <div class="chart-header">
+                        <h3>Customer Retention Analysis</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-user-friends" title="Customer loyalty and retention patterns"></i>
+                            <i class="fas fa-question-circle chart-help" title="Click for explanation" onclick="showChartExplanation('retention')"></i>
+                        </div>
+                    </div>
+                    <div class="chart-explanation" id="retention-explanation" style="display: none;">
+                        <p><strong>What this shows:</strong> Customer delivery frequency and loyalty patterns</p>
+                        <ul>
+                            <li><strong>Frequency:</strong> How often each customer orders fuel (days between deliveries)</li>
+                            <li><strong>Consistency:</strong> Regular customers vs. one-time buyers</li>
+                            <li><strong>Risk Analysis:</strong> Customers who may be overdue for their next delivery</li>
+                            <li><strong>Retention Score:</strong> Based on delivery frequency and recency</li>
+                        </ul>
+                        <p><em>Use this to identify your most loyal customers and those at risk of churning.</em></p>
+                    </div>
+                    <canvas id="customer-retention-chart"></canvas>
+                </div>
+
+                <!-- 2024 vs 2025 Sales Comparison -->
+                <div class="chart-container" id="year-comparison-sales-container">
+                    <div class="chart-header">
+                        <h3>2024 vs 2025 Sales Comparison</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-chart-line" title="Year-over-year sales performance"></i>
+                        </div>
+                    </div>
+                    <canvas id="year-comparison-sales-chart"></canvas>
+                </div>
+
+                <!-- 2024 vs 2025 Volume Comparison -->
+                <div class="chart-container" id="year-comparison-volume-container">
+                    <div class="chart-header">
+                        <h3>2024 vs 2025 Volume Comparison</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-gas-pump" title="Year-over-year volume performance"></i>
+                        </div>
+                    </div>
+                    <canvas id="year-comparison-volume-chart"></canvas>
+                </div>
+
+                <!-- Monthly Growth Rate -->
+                <div class="chart-container" id="monthly-growth-container">
+                    <div class="chart-header">
+                        <h3>Monthly Growth Rate (2024 vs 2025)</h3>
+                        <div class="chart-info">
+                            <i class="fas fa-percentage" title="Month-over-month growth comparison"></i>
+                        </div>
+                    </div>
+                    <canvas id="monthly-growth-chart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- GP Time Series Charts Section -->
+        <section class="gp-charts-section">
+            <div class="section-header">
+                <h2>📈 GP Data Time Series Analysis</h2>
+                <p>Historical trends from Data-gp-2024 and Data-gp-2025 sheets</p>
+            </div>
+            <div class="gp-charts-grid">
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>2024 vs 2025 Sales Comparison</h3>
+                        <div class="chart-controls">
+                            <select id="gp-period-selector" class="period-selector">
+                                <option value="monthly">Monthly</option>
+                                <option value="quarterly">Quarterly</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="gp-comparison-chart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <h3>Combined GP Data Timeline</h3>
+                        <div class="chart-info">
+                            <span class="info-badge">Multi-Year View</span>
+                        </div>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="gp-timeline-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Tables Section -->
+        <section class="tables-section">
+            <div class="table-container">
+                <div class="table-header">
+                    <h3>Recent Transactions</h3>
+                    <button class="export-btn" id="export-btn">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+                </div>
+                <div class="table-wrapper">
+                    <table id="transactions-table" class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Customer</th>
+                                <th>Product Type</th>
+                                <th>Gallons</th>
+                                <th>Sales</th>
+                                <th>Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-body">
+                            <!-- Data will be populated by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Data Explorer Section -->
+        <section class="data-explorer-section">
+            <div class="section-header">
+                <h2>Data Explorer</h2>
+                <div class="explorer-controls">
+                    <button id="view-headers-btn" class="explorer-btn" title="View Data Headers">
+                        <i class="fas fa-table"></i>
+                        View Headers
+                    </button>
+                    <button id="view-sample-data-btn" class="explorer-btn" title="View Sample Data">
+                        <i class="fas fa-eye"></i>
+                        Sample Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Headers Display -->
+            <div class="headers-display" id="headers-display" style="display: none;">
+                <h3>Available Data Fields</h3>
+                <div class="headers-grid" id="headers-grid">
+                    <!-- Dynamic content -->
+                </div>
+            </div>
+
+            <!-- Sample Data Display -->
+            <div class="sample-data-display" id="sample-data-display" style="display: none;">
+                <h3>Sample Data (First 10 Records)</h3>
+                <div class="sample-table-container">
+                    <table class="sample-data-table">
+                        <thead id="sample-table-head">
+                            <!-- Dynamic headers -->
+                        </thead>
+                        <tbody id="sample-table-body">
+                            <!-- Dynamic content -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Natural Language Query -->
+            <div class="natural-query-section">
+                <h3>Ask Questions About Your Data</h3>
+                <div class="query-input-container">
+                    <textarea id="natural-query-input" class="query-input"
+                              placeholder="Ask questions like: 'What were my top 5 customers last month?' or 'Show me profit trends by product type' or 'Which days had the highest sales?'"></textarea>
+                    <button id="execute-query-btn" class="execute-query-btn" title="Execute Query">
+                        <i class="fas fa-search"></i>
+                        Ask AI
+                    </button>
+                </div>
+                <div class="query-results" id="query-results" style="display: none;">
+                    <h4>Query Results</h4>
+                    <div class="results-content" id="results-content">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart Builder -->
+            <div class="chart-builder-section">
+                <h3>Custom Chart Builder</h3>
+                <div class="chart-builder-controls">
+                    <div class="chart-config-row">
+                        <label for="chart-type-select">Chart Type:</label>
+                        <select id="chart-type-select" class="chart-config-select">
+                            <option value="line">Line Chart</option>
+                            <option value="bar">Bar Chart</option>
+                            <option value="doughnut">Doughnut Chart</option>
+                            <option value="scatter">Scatter Plot</option>
+                            <option value="area">Area Chart</option>
+                        </select>
+                    </div>
+                    <div class="chart-config-row">
+                        <label for="x-axis-select">X-Axis:</label>
+                        <select id="x-axis-select" class="chart-config-select">
+                            <!-- Dynamic options -->
+                        </select>
+                    </div>
+                    <div class="chart-config-row">
+                        <label for="y-axis-select">Y-Axis:</label>
+                        <select id="y-axis-select" class="chart-config-select">
+                            <!-- Dynamic options -->
+                        </select>
+                    </div>
+                    <div class="chart-config-row">
+                        <label for="group-by-select">Group By (Optional):</label>
+                        <select id="group-by-select" class="chart-config-select">
+                            <option value="">None</option>
+                            <!-- Dynamic options -->
+                        </select>
+                    </div>
+                    <button id="create-custom-chart-btn" class="create-chart-btn" title="Create Custom Chart">
+                        <i class="fas fa-chart-bar"></i>
+                        Create Chart
+                    </button>
+                </div>
+                <div class="custom-chart-container" id="custom-chart-container" style="display: none;">
+                    <canvas id="custom-chart"></canvas>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading Chief Petroleum data...</p>
+        </div>
+    </div>
+
+    <!-- Error Modal -->
+    <div class="modal" id="error-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Connection Error</h3>
+                <button class="modal-close" id="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="error-message">Unable to load data. Please check your connection and try again.</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-retry" id="retry-btn">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        // Ensure Chart.js is loaded before our scripts
+        if (typeof Chart === 'undefined') {
+            console.error('Chart.js failed to load from CDN');
+        } else {
+            console.log('Chart.js loaded successfully');
+        }
+    </script>
+    <script src="database-data-service.js" onerror="console.log('Database service not available, using CSV mode')"></script>
+    <script src="data-service.js" onerror="console.error('Failed to load data-service.js')"></script>
+    <script src="chart-manager.js" onerror="console.error('Failed to load chart-manager.js')"></script>
+    <script src="theme-manager.js" onerror="console.error('Failed to load theme-manager.js')"></script>
+    <script src="dashboard.js" onerror="console.error('Failed to load dashboard.js')"></script>
+</body>
+</html>
