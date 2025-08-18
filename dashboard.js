@@ -12,7 +12,6 @@ class ChiefDashboard {
     this.currentData = null;
     this.currentPeriod = 'monthly';
     this.isLoading = false;
-    this.useDatabaseMode = true; // Default to database mode
     this.uploadedDatasets = {}; // Store multiple uploaded datasets
     this.currentDataset = null; // Track current active dataset
 
@@ -80,13 +79,7 @@ class ChiefDashboard {
       });
     }
 
-    // Data source toggle button
-    const dataSourceToggle = document.getElementById('data-source-toggle');
-    if (dataSourceToggle) {
-      dataSourceToggle.addEventListener('click', () => {
-        this.toggleDataSource();
-      });
-    }
+    // Note: Data source toggle removed - using Railway database only
 
     // Modal close button
     const modalClose = document.getElementById('modal-close');
@@ -258,34 +251,20 @@ class ChiefDashboard {
     try {
       this.showLoading('Loading Chief Petroleum data...');
 
-      // Try database first, fallback to Google Sheets
-      if (this.useDatabaseMode) {
-        try {
-          console.log('🚀 Loading data from Railway database...');
+      // Load data from Railway database only
+      console.log('🚀 Loading data from Railway database...');
 
-          // Test Railway connection first
-          const healthCheck = await this.databaseService.healthCheck();
-          console.log('🔍 Railway health check result:', healthCheck);
+      // Test Railway connection first
+      const healthCheck = await this.databaseService.healthCheck();
+      console.log('🔍 Railway health check result:', healthCheck);
 
-          if (!healthCheck) {
-            throw new Error('Railway health check failed');
-          }
-
-          this.currentData = await this.loadFromDatabase();
-          console.log('✅ Database data loaded successfully');
-          this.showNotification('Connected to Railway database', 'success');
-        } catch (dbError) {
-          console.warn('⚠️ Database loading failed, falling back to Google Sheets:', dbError);
-          this.useDatabaseMode = false;
-          this.currentData = await this.dataService.fetchFuelData();
-          this.showNotification('Using Google Sheets data (Railway unavailable)', 'warning');
-        }
-      } else {
-        // Fetch data from Google Sheets
-        console.log('📊 Loading data from Google Sheets...');
-        this.currentData = await this.dataService.fetchFuelData();
-        this.showNotification('Using Google Sheets data', 'info');
+      if (!healthCheck) {
+        throw new Error('Railway health check failed - database is not available');
       }
+
+      this.currentData = await this.loadFromDatabase();
+      console.log('✅ Database data loaded successfully');
+      this.showNotification('Connected to Railway database', 'success');
 
       console.log('📊 Data loaded:', this.currentData.summary);
 
@@ -396,60 +375,7 @@ class ChiefDashboard {
     }
   }
 
-  /**
-   * Switch to a different data sheet
-   * @param {string} sheetName - Name of the sheet to switch to
-   */
-  async switchSheet(sheetName) {
-    if (this.isLoading) return;
-
-    try {
-      console.log(`🔄 Switching to sheet: ${sheetName}`);
-      console.log('🔍 Available sheets:', this.dataService.getAvailableSheets());
-
-      // Show loading with sheet-specific message
-      this.showLoading(`Loading ${sheetName} data...`);
-
-      // Update data service current sheet
-      this.dataService.setCurrentSheet(sheetName);
-      console.log('🔍 Current sheet set to:', this.dataService.getCurrentSheet());
-
-      // Save selection to localStorage
-      localStorage.setItem('chief-selected-sheet', sheetName);
-
-      // Load data for the new sheet
-      await this.loadDashboardData();
-
-      // Update the page title to reflect current sheet
-      this.updatePageTitle(sheetName);
-
-      console.log(`✅ Successfully switched to sheet: ${sheetName}`);
-
-    } catch (error) {
-      console.error(`❌ Failed to switch to sheet ${sheetName}:`, error);
-      this.showError(`Failed to load ${sheetName}: ${error.message}`);
-
-      // Revert selector to previous sheet
-      const currentSheet = this.dataService.getCurrentSheet();
-      const sheetSelector = document.getElementById('sheet-selector');
-      if (sheetSelector) {
-        sheetSelector.value = currentSheet;
-      }
-    }
-  }
-
-  /**
-   * Update page title based on current sheet
-   * @param {string} sheetName - Current sheet name
-   */
-  updatePageTitle(sheetName) {
-    const sheetInfo = this.dataService.getSheetInfo(sheetName);
-    const titleElement = document.querySelector('.company-info p');
-
-    if (titleElement && sheetInfo) {
-      titleElement.textContent = `Fuel Business Dashboard - ${sheetInfo.description}`;
-    }
-  }
+  // Note: Sheet switching functionality removed - using Railway database only
 
   /**
    * Update KPI cards
@@ -535,7 +461,6 @@ class ChiefDashboard {
 
     // Determine data source and use appropriate service
     const isCSVData = this.currentData.source && this.currentData.source.includes('CSV Upload');
-    const isRailwayData = this.useDatabaseMode && this.databaseService;
 
     if (isCSVData) {
       // For CSV data, pass the data directly
@@ -543,18 +468,12 @@ class ChiefDashboard {
       await this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
       this.chartManager.createCustomerChart(this.currentData);
       this.chartManager.createProfitChart(this.currentData);
-    } else if (isRailwayData) {
+    } else {
       // For Railway database data, pass the database service
       console.log('📊 Using Railway database service for charts');
       await this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
       this.chartManager.createCustomerChart(this.databaseService);
       this.chartManager.createProfitChart(this.databaseService);
-    } else {
-      // For Google Sheets data, pass the data service
-      console.log('📊 Using Google Sheets service for charts');
-      await this.chartManager.createSalesTrendChart(this.dataService, this.currentPeriod);
-      this.chartManager.createCustomerChart(this.dataService);
-      this.chartManager.createProfitChart(this.dataService);
     }
 
     // Update product chart with current filter
@@ -1110,43 +1029,7 @@ class ChiefDashboard {
     }
   }
 
-  /**
-   * Toggle between database and Google Sheets data source
-   */
-  async toggleDataSource() {
-    if (this.isLoading) return;
-
-    try {
-      this.useDatabaseMode = !this.useDatabaseMode;
-      const newSource = this.useDatabaseMode ? 'Railway Database' : 'Google Sheets';
-
-      this.showLoading(`Switching to ${newSource}...`);
-
-      // Clear any cached data
-      if (this.dataService && this.dataService.clearCache) {
-        this.dataService.clearCache();
-      }
-
-      // Reload data with new source
-      await this.loadDashboardData();
-
-      this.showNotification(`Switched to ${newSource}`, 'success');
-
-      // Update toggle button text
-      const toggleBtn = document.getElementById('data-source-toggle');
-      if (toggleBtn) {
-        toggleBtn.textContent = this.useDatabaseMode ? '📊 Use Google Sheets' : '🚀 Use Database';
-        toggleBtn.title = this.useDatabaseMode
-          ? 'Switch to Google Sheets data'
-          : 'Switch to Railway database data';
-      }
-
-    } catch (error) {
-      console.error('❌ Data source toggle failed:', error);
-      this.useDatabaseMode = !this.useDatabaseMode; // Revert on error
-      this.showError(`Failed to switch data source: ${error.message}`);
-    }
-  }
+  // Note: Data source toggle functionality removed - using Railway database only
 
   /**
    * Update data range information display
@@ -1972,17 +1855,13 @@ class ChiefDashboard {
 
     // Determine data source and use appropriate service
     const isCSVData = this.currentData.source && this.currentData.source.includes('CSV Upload');
-    const isRailwayData = this.useDatabaseMode && this.databaseService;
 
     if (isCSVData) {
       // For CSV data, pass the data directly
       await this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
-    } else if (isRailwayData) {
+    } else {
       // For Railway database data, pass the database service
       await this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
-    } else {
-      // For Google Sheets data, pass the data service
-      await this.chartManager.createSalesTrendChart(this.dataService, this.currentPeriod);
     }
   }
 
@@ -2723,29 +2602,15 @@ class ChiefDashboard {
 
       let gp2024Data, gp2025Data;
 
-      if (this.useDatabaseMode) {
-        // Load from Railway database
-        console.log('🚀 Loading GP data from Railway database...');
-        try {
-          const [gp2024Response, gp2025Response] = await Promise.all([
-            this.databaseService.getGPData('2024'),
-            this.databaseService.getGPData('2025')
-          ]);
+      // Load from Railway database
+      console.log('🚀 Loading GP data from Railway database...');
+      const [gp2024Response, gp2025Response] = await Promise.all([
+        this.databaseService.getGPData('2024'),
+        this.databaseService.getGPData('2025')
+      ]);
 
-          gp2024Data = gp2024Response;
-          gp2025Data = gp2025Response;
-        } catch (dbError) {
-          console.warn('⚠️ Railway GP data loading failed, trying Google Sheets:', dbError);
-          // Fallback to Google Sheets
-          gp2024Data = await this.dataService.fetchFuelData('Data-gp-2024');
-          gp2025Data = await this.dataService.fetchFuelData('Data-gp-2025');
-        }
-      } else {
-        // Load from Google Sheets
-        console.log('📊 Loading GP data from Google Sheets...');
-        gp2024Data = await this.dataService.fetchFuelData('Data-gp-2024');
-        gp2025Data = await this.dataService.fetchFuelData('Data-gp-2025');
-      }
+      gp2024Data = gp2024Response;
+      gp2025Data = gp2025Response;
 
       console.log('🔍 Debug GP Data 2024:', gp2024Data);
       console.log('🔍 Debug GP Data 2025:', gp2025Data);
@@ -3144,9 +3009,8 @@ class ChiefDashboard {
       const transactions = await this.databaseService.getTransactions({ limit: 5 });
       console.log('Transactions result:', transactions);
 
-      // Test 4: Force Railway mode
-      console.log('4️⃣ Forcing Railway mode...');
-      this.useDatabaseMode = true;
+      // Test 4: Reload dashboard data
+      console.log('4️⃣ Reloading dashboard data...');
       await this.loadDashboardData();
 
       this.showNotification('✅ Railway connection test successful!', 'success');

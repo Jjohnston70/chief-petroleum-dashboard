@@ -4,8 +4,7 @@ const ENV_CONFIG = {
   API_BASE_URL: window.API_BASE_URL || 'https://api-server-final-production.up.railway.app',
   
   // Feature flags
-  USE_DATABASE: window.USE_DATABASE !== false, // Default true
-  USE_GOOGLE_SHEETS: window.USE_GOOGLE_SHEETS || false,
+  USE_DATABASE: true, // Always use Railway database
   
   // Cache settings
   CACHE_TIMEOUT: 5 * 60 * 1000, // 5 minutes
