@@ -122,8 +122,8 @@ class ChiefChartManager {
   /**
    * Create sales trend chart
    */
-  createSalesTrendChart(data, period = 'monthly') {
-    const chartData = this.prepareSalesTrendData(data, period);
+  async createSalesTrendChart(data, period = 'monthly') {
+    const chartData = await this.prepareSalesTrendData(data, period);
     const themeColors = this.getThemeColors();
     
     const config = {
@@ -493,12 +493,12 @@ class ChiefChartManager {
   /**
    * Prepare sales trend data
    */
-  prepareSalesTrendData(data, period) {
+  async prepareSalesTrendData(data, period) {
     // Check if data is a dataService object or direct data
     if (data.getSalesTrendData && typeof data.getSalesTrendData === 'function') {
       // Data service object (Railway database or fallback)
       const currentData = data.dashboard?.getFilteredData() || data.getCurrentData();
-      const salesTrend = data.getSalesTrendData(currentData, period);
+      const salesTrend = await data.getSalesTrendData(currentData, period);
 
       return {
         labels: salesTrend.map(item => String(this.formatPeriodLabel(item.period, period))),

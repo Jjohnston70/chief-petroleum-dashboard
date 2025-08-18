@@ -145,9 +145,9 @@ class ChiefDashboard {
     });
 
     // Sales period dropdown event listener
-    document.getElementById('sales-period').addEventListener('change', (e) => {
+    document.getElementById('sales-period').addEventListener('change', async (e) => {
       this.currentPeriod = e.target.value;
-      this.updateSalesTrendChart();
+      await this.updateSalesTrendChart();
     });
 
     // Initialize datasets storage
@@ -540,19 +540,19 @@ class ChiefDashboard {
     if (isCSVData) {
       // For CSV data, pass the data directly
       console.log('📊 Using CSV data for charts');
-      this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
+      await this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
       this.chartManager.createCustomerChart(this.currentData);
       this.chartManager.createProfitChart(this.currentData);
     } else if (isRailwayData) {
       // For Railway database data, pass the database service
       console.log('📊 Using Railway database service for charts');
-      this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
+      await this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
       this.chartManager.createCustomerChart(this.databaseService);
       this.chartManager.createProfitChart(this.databaseService);
     } else {
       // For Google Sheets data, pass the data service
       console.log('📊 Using Google Sheets service for charts');
-      this.chartManager.createSalesTrendChart(this.dataService, this.currentPeriod);
+      await this.chartManager.createSalesTrendChart(this.dataService, this.currentPeriod);
       this.chartManager.createCustomerChart(this.dataService);
       this.chartManager.createProfitChart(this.dataService);
     }
@@ -1965,7 +1965,7 @@ class ChiefDashboard {
   /**
    * Update sales trend chart based on period selection
    */
-  updateSalesTrendChart() {
+  async updateSalesTrendChart() {
     if (!this.currentData || !this.chartManager) return;
 
     console.log(`📈 Updating sales trend chart with period: ${this.currentPeriod}`);
@@ -1976,13 +1976,13 @@ class ChiefDashboard {
 
     if (isCSVData) {
       // For CSV data, pass the data directly
-      this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
+      await this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
     } else if (isRailwayData) {
       // For Railway database data, pass the database service
-      this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
+      await this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
     } else {
       // For Google Sheets data, pass the data service
-      this.chartManager.createSalesTrendChart(this.dataService, this.currentPeriod);
+      await this.chartManager.createSalesTrendChart(this.dataService, this.currentPeriod);
     }
   }
 
