@@ -487,6 +487,21 @@ class DatabaseDataService {
   }
 
   /**
+   * Alias methods for dashboard compatibility
+   */
+  async getKPIs(filters = {}) {
+    return await this.fetchKPIs(filters);
+  }
+
+  async getTransactions(filters = {}) {
+    return await this.fetchTransactions(filters);
+  }
+
+  async getRecapData(filters = {}) {
+    return await this.fetchRecapData(filters);
+  }
+
+  /**
    * Get current data from cache or recent fetch
    * @returns {Object} Current data object with transactions
    */
