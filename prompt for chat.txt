@@ -1,0 +1,51 @@
+Based on your dev console logs, I can see that the Railway integration is actually working perfectly! All four data sources are switching successfully:
+
+✅ Data → 8,100 transactions loaded
+✅ Data-gp-2025 → 117 records loaded
+✅ Data-gp-2024 → 178 records loaded
+✅ Recap-data → 437 records loaded
+
+However, there are two specific issues that need fixing:
+🎯 DIAGNOSTIC PROMPT FOR CURRENT ISSUES
+CHIEF PETROLEUM DASHBOARD - CURRENT ISSUE ANALYSIS
+
+Based on the dev console logs, the Railway API integration is working perfectly with all four data sources loading successfully. However, there are two specific issues that need attention:
+
+ISSUE #1: CHART DATA PREPARATION WARNING
+- Warning: "No transactions data for trend analysis" in getSalesTrendData function
+- Location: database-data-service.js:342 → chart-manager.js:501
+- Problem: Chart manager expects 'transactions' data structure but receives different data types (gp-2024, gp-2025, recap)
+- Impact: Charts may not display correctly for non-transaction data sources
+
+ISSUE #2: DAILY RECAP DATE SEARCH INEFFICIENCY  
+- Problem: System is searching for recent dates (2025-08-15 to 2025-08-04) but finding no daily records
+- Behavior: Repeatedly queries same date ranges with 0 results
+- Root cause: Transaction data appears to be from older dates, but daily recap searches recent dates
+- Impact: Unnecessary API calls and poor user experience
+
+SPECIFIC FIXES NEEDED:
+
+1. FIX CHART DATA PREPARATION:
+   - Update getSalesTrendData() in database-data-service.js to handle different data types
+   - Modify chart-manager.js prepareSalesTrendData() to adapt based on data source
+   - Add data type detection in chart rendering logic
+
+2. FIX DAILY RECAP DATE LOGIC:
+   - Implement smarter date range detection based on actual data availability
+   - Add date range analysis to find the most recent data period
+   - Optimize daily recap search to avoid repeated failed queries
+   - Consider adding "last available date" caching
+
+3. CHART TYPE ADAPTATION:
+   - Ensure charts display appropriate visualizations for each data type:
+     * Transactions: Sales trends, customer analysis, product distribution
+     * GP Data: Goal vs actual performance, rolling averages
+     * Recap Data: Driver performance, company analysis, margin trends
+
+CURRENT SUCCESS METRICS:
+✅ Railway API connectivity: 100% working
+✅ Data source switching: 100% working  
+✅ Data loading: All four sources successful
+✅ Record counts: Transactions (8,100), GP-2025 (117), GP-2024 (178), Recap (437)
+
+The core Railway integration is solid - these are optimization and user experience issues.
