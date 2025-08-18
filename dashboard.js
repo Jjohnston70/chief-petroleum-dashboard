@@ -1891,7 +1891,8 @@ class ChiefDashboard {
    */
   filterRecordsByProductType(records, filterType) {
     return records.filter(record => {
-      const productType = (record['Product Type'] || record['Product'] || '').toLowerCase();
+      // Handle both Railway database field names (lowercase with underscore) and CSV field names (capitalized with space)
+      const productType = (record['Product Type'] || record['product_type'] || record['Product'] || '').toLowerCase();
 
       switch (filterType) {
         case 'diesel':
