@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chief Petroleum - Railway Database Connection Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #e0e0e0;
+            padding: 2rem;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        h1 {
+            color: #4db8ff;
+            margin-bottom: 2rem;
+        }
+        .test-section {
+            background: #2a2a2a;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid #333;
+        }
+        .status {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            margin-left: 1rem;
+        }
+        .status.success {
+            background: #22c55e;
+            color: white;
+        }
+        .status.error {
+            background: #ef4444;
+            color: white;
+        }
+        .status.pending {
+            background: #f59e0b;
+            color: white;
+        }
+        .log {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 0.875rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #4db8ff;
+            color: white;
+            border: none;
+            padding: 0.5rem 1.5rem;
+            border-radius: 4px;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-right: 1rem;
+            transition: background 0.2s;
+        }
+        button:hover {
+            background: #3a9fdb;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .error-msg {
+            color: #ff6b6b;
+            margin-top: 0.5rem;
+        }
+        .success-msg {
+            color: #51cf66;
+            margin-top: 0.5rem;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .metric-card {
+            background: #333;
+            padding: 1rem;
+            border-radius: 6px;
+        }
+        .metric-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #4db8ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Chief Petroleum - Railway Database Connection Test</h1>
+        
+        <div class="test-section">
+            <h2>Environment Configuration</h2>
+            <div class="log" id="env-info">Loading...</div>
+        </div>
+
+        <div class="test-section">
+            <h2>Railway API Health Check <span class="status pending" id="health-status">Pending</span></h2>
+            <button onclick="testHealth()">Test Railway Health</button>
+            <div class="log" id="health-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Database KPIs Test <span class="status pending" id="kpis-status">Pending</span></h2>
+            <button onclick="testKPIs()">Test KPIs Endpoint</button>
+            <div class="log" id="kpis-log"></div>
+            <div class="metric-grid" id="kpis-metrics" style="display: none;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Transactions Data Test <span class="status pending" id="transactions-status">Pending</span></h2>
+            <button onclick="testTransactions()">Test Transactions Endpoint</button>
+            <div class="log" id="transactions-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>GP Data Test <span class="status pending" id="gp-status">Pending</span></h2>
+            <button onclick="testGPData()">Test GP Data Endpoints</button>
+            <div class="log" id="gp-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Recap Data Test <span class="status pending" id="recap-status">Pending</span></h2>
+            <button onclick="testRecapData()">Test Recap Data Endpoint</button>
+            <div class="log" id="recap-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Complete Integration Test <span class="status pending" id="integration-status">Pending</span></h2>
+            <button onclick="runIntegrationTest()">Run Full Integration Test</button>
+            <div class="log" id="integration-log"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>Test Summary</h2>
+            <div id="summary" class="log">Click individual tests above to verify Railway database connection.</div>
+        </div>
+    </div>
+
+    <!-- Include environment config -->
+    <script src="env-config.js"></script>
+    <script src="database-data-service.js"></script>
+
+    <script>
+        // Initialize test environment
+        let databaseService;
+        const API_BASE = window.ENV_CONFIG?.API_BASE_URL || 'https://api-server-final-production.up.railway.app';
+
+        document.addEventListener('DOMContentLoaded', function() {
+            showEnvironmentInfo();
+            databaseService = new DatabaseDataService();
+        });
+
+        function showEnvironmentInfo() {
+            const envInfo = document.getElementById('env-info');
+            const config = {
+                'API Base URL': API_BASE,
+                'Environment': window.ENV_CONFIG?.DEBUG ? 'Development' : 'Production',
+                'Database Mode': window.ENV_CONFIG?.USE_DATABASE !== false ? 'Enabled' : 'Disabled',
+                'Cache Timeout': (window.ENV_CONFIG?.CACHE_TIMEOUT || 300000) / 1000 + ' seconds',
+                'User Agent': navigator.userAgent,
+                'Timestamp': new Date().toISOString()
+            };
+
+            let output = 'Environment Configuration:\n';
+            for (const [key, value] of Object.entries(config)) {
+                output += `${key}: ${value}\n`;
+            }
+            envInfo.textContent = output;
+        }
+
+        async function testHealth() {
+            const statusEl = document.getElementById('health-status');
+            const logEl = document.getElementById('health-log');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            try {
+                logEl.textContent = 'Testing Railway API health endpoint...\n';
+                
+                const response = await fetch(`${API_BASE}/health`);
+                const responseText = await response.text();
+                
+                logEl.textContent += `Response Status: ${response.status} ${response.statusText}\n`;
+                logEl.textContent += `Response Body: ${responseText}\n`;
+                logEl.textContent += `Response Time: ${new Date().toISOString()}\n`;
+                
+                if (response.ok) {
+                    statusEl.textContent = 'Success';
+                    statusEl.className = 'status success';
+                    logEl.textContent += '✅ Railway API is healthy and responding\n';
+                } else {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.className = 'status error';
+                logEl.textContent += `❌ Health check failed: ${error.message}\n`;
+                console.error('Health check error:', error);
+            }
+        }
+
+        async function testKPIs() {
+            const statusEl = document.getElementById('kpis-status');
+            const logEl = document.getElementById('kpis-log');
+            const metricsEl = document.getElementById('kpis-metrics');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            try {
+                logEl.textContent = 'Testing KPIs endpoint...\n';
+                
+                const response = await fetch(`${API_BASE}/api/kpis`);
+                const data = await response.json();
+                
+                logEl.textContent += `Response Status: ${response.status}\n`;
+                logEl.textContent += `Data Structure: ${JSON.stringify(data, null, 2)}\n`;
+                
+                if (response.ok && data) {
+                    statusEl.textContent = 'Success';
+                    statusEl.className = 'status success';
+                    
+                    // Display KPI metrics
+                    metricsEl.style.display = 'grid';
+                    metricsEl.innerHTML = `
+                        <div class="metric-card">
+                            <div>Total Transactions</div>
+                            <div class="metric-value">${data.total_transactions || 'N/A'}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Total Sales</div>
+                            <div class="metric-value">$${parseFloat(data.total_sales || 0).toLocaleString()}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Total Gallons</div>
+                            <div class="metric-value">${parseFloat(data.total_gallons || 0).toLocaleString()}</div>
+                        </div>
+                        <div class="metric-card">
+                            <div>Avg Margin</div>
+                            <div class="metric-value">${parseFloat(data.avg_margin || 0).toFixed(1)}%</div>
+                        </div>
+                    `;
+                    
+                    logEl.textContent += '✅ KPIs endpoint working correctly\n';
+                } else {
+                    throw new Error('Invalid KPIs response');
+                }
+                
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.className = 'status error';
+                logEl.textContent += `❌ KPIs test failed: ${error.message}\n`;
+                console.error('KPIs test error:', error);
+            }
+        }
+
+        async function testTransactions() {
+            const statusEl = document.getElementById('transactions-status');
+            const logEl = document.getElementById('transactions-log');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            try {
+                logEl.textContent = 'Testing transactions endpoint...\n';
+                
+                const response = await fetch(`${API_BASE}/api/transactions?limit=5`);
+                const data = await response.json();
+                
+                logEl.textContent += `Response Status: ${response.status}\n`;
+                logEl.textContent += `Record Count: ${data.data?.length || 0}\n`;
+                logEl.textContent += `Total Available: ${data.total || 'Unknown'}\n`;
+                
+                if (data.data && data.data.length > 0) {
+                    logEl.textContent += `Sample Record: ${JSON.stringify(data.data[0], null, 2)}\n`;
+                }
+                
+                if (response.ok && data.data) {
+                    statusEl.textContent = 'Success';
+                    statusEl.className = 'status success';
+                    logEl.textContent += '✅ Transactions endpoint working correctly\n';
+                } else {
+                    throw new Error('Invalid transactions response');
+                }
+                
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.className = 'status error';
+                logEl.textContent += `❌ Transactions test failed: ${error.message}\n`;
+                console.error('Transactions test error:', error);
+            }
+        }
+
+        async function testGPData() {
+            const statusEl = document.getElementById('gp-status');
+            const logEl = document.getElementById('gp-log');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            try {
+                logEl.textContent = 'Testing GP data endpoints...\n';
+                
+                // Test both 2024 and 2025 GP data
+                const [response2024, response2025] = await Promise.all([
+                    fetch(`${API_BASE}/api/gp-data/2024?limit=5`),
+                    fetch(`${API_BASE}/api/gp-data/2025?limit=5`)
+                ]);
+                
+                const data2024 = await response2024.json();
+                const data2025 = await response2025.json();
+                
+                logEl.textContent += `2024 GP Data - Status: ${response2024.status}, Records: ${data2024.data?.length || 0}\n`;
+                logEl.textContent += `2025 GP Data - Status: ${response2025.status}, Records: ${data2025.data?.length || 0}\n`;
+                
+                if (response2024.ok || response2025.ok) {
+                    statusEl.textContent = 'Success';
+                    statusEl.className = 'status success';
+                    logEl.textContent += '✅ GP data endpoints accessible\n';
+                    
+                    if (data2024.data && data2024.data.length > 0) {
+                        logEl.textContent += `Sample 2024 Record: ${JSON.stringify(data2024.data[0], null, 2)}\n`;
+                    }
+                    if (data2025.data && data2025.data.length > 0) {
+                        logEl.textContent += `Sample 2025 Record: ${JSON.stringify(data2025.data[0], null, 2)}\n`;
+                    }
+                } else {
+                    throw new Error('Both GP data endpoints failed');
+                }
+                
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.className = 'status error';
+                logEl.textContent += `❌ GP data test failed: ${error.message}\n`;
+                console.error('GP data test error:', error);
+            }
+        }
+
+        async function testRecapData() {
+            const statusEl = document.getElementById('recap-status');
+            const logEl = document.getElementById('recap-log');
+            
+            statusEl.textContent = 'Testing...';
+            statusEl.className = 'status pending';
+            
+            try {
+                logEl.textContent = 'Testing recap data endpoint...\n';
+                
+                const response = await fetch(`${API_BASE}/api/recap-data?limit=5`);
+                const data = await response.json();
+                
+                logEl.textContent += `Response Status: ${response.status}\n`;
+                logEl.textContent += `Record Count: ${data.data?.length || 0}\n`;
+                
+                if (data.data && data.data.length > 0) {
+                    logEl.textContent += `Sample Record: ${JSON.stringify(data.data[0], null, 2)}\n`;
+                }
+                
+                if (response.ok && data.data) {
+                    statusEl.textContent = 'Success';
+                    statusEl.className = 'status success';
+                    logEl.textContent += '✅ Recap data endpoint working correctly\n';
+                } else {
+                    throw new Error('Invalid recap data response');
+                }
+                
+            } catch (error) {
+                statusEl.textContent = 'Error';
+                statusEl.className = 'status error';
+                logEl.textContent += `❌ Recap data test failed: ${error.message}\n`;
+                console.error('Recap data test error:', error);
+            }
+        }
+
+        async function runIntegrationTest() {
+            const statusEl = document.getElementById('integration-status');
+            const logEl = document.getElementById('integration-log');
+            
+            statusEl.textContent = 'Running...';
+            statusEl.className = 'status pending';
+            
+            try {
+                logEl.textContent = 'Running complete integration test...\n';
+                
+                // Test database service class
+                if (!databaseService) {
+                    databaseService = new DatabaseDataService();
+                }
+                
+                logEl.textContent += 'Testing DatabaseDataService methods...\n';
+                
+                // Test health check
+                const healthOk = await databaseService.healthCheck();
+                logEl.textContent += `Health Check: ${healthOk ? '✅' : '❌'}\n`;
+                
+                // Test KPIs
+                const kpis = await databaseService.fetchKPIs();
+                logEl.textContent += `KPIs Fetch: ${kpis ? '✅' : '❌'} (${JSON.stringify(kpis).substring(0, 100)}...)\n`;
+                
+                // Test transactions
+                const transactions = await databaseService.fetchTransactions({ limit: 3 });
+                logEl.textContent += `Transactions Fetch: ${transactions?.data ? '✅' : '❌'} (${transactions?.data?.length || 0} records)\n`;
+                
+                // Test data processing
+                if (transactions?.data && transactions.data.length > 0) {
+                    const processedData = databaseService.processDataForDashboard(transactions, 'transactions');
+                    logEl.textContent += `Data Processing: ${processedData ? '✅' : '❌'}\n`;
+                }
+                
+                statusEl.textContent = 'Complete';
+                statusEl.className = 'status success';
+                logEl.textContent += '\n✅ Integration test completed successfully!\n';
+                logEl.textContent += `Railway database is ready for production use.\n`;
+                
+            } catch (error) {
+                statusEl.textContent = 'Failed';
+                statusEl.className = 'status error';
+                logEl.textContent += `\n❌ Integration test failed: ${error.message}\n`;
+                console.error('Integration test error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

@@ -496,7 +496,7 @@ class ChiefChartManager {
   prepareSalesTrendData(data, period) {
     // Check if data is a dataService object or direct data
     if (data.getSalesTrendData && typeof data.getSalesTrendData === 'function') {
-      // Data service object (Google Sheets)
+      // Data service object (Railway database or fallback)
       const currentData = data.dashboard?.getFilteredData() || data.getCurrentData();
       const salesTrend = data.getSalesTrendData(currentData, period);
 

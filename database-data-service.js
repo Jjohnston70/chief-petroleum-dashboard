@@ -3,11 +3,13 @@
 
 class DatabaseDataService {
   constructor() {
-    // Updated Railway API URL - endpoints are at root level, not /api
-    this.apiBaseUrl = 'https://api-server-final-production.up.railway.app';
+    // Use environment config if available, fallback to default
+    this.apiBaseUrl = (window.ENV_CONFIG && window.ENV_CONFIG.API_BASE_URL) || 'https://api-server-final-production.up.railway.app';
+    
+    console.log('🔧 Database Service initialized with API URL:', this.apiBaseUrl);
 
     this.cache = new Map();
-    this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
+    this.cacheTimeout = (window.ENV_CONFIG && window.ENV_CONFIG.CACHE_TIMEOUT) || 5 * 60 * 1000; // 5 minutes
   }
 
   /**
