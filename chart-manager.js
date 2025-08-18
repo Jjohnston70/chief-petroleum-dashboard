@@ -709,12 +709,18 @@ class ChiefChartManager {
 
     // Check if data is a dataService object or direct data
     if (data.getCurrentData && typeof data.getCurrentData === 'function') {
-      // Data service object (Google Sheets)
+      // Data service object (Railway database or Google Sheets)
       const currentData = data.dashboard?.getFilteredData() || data.getCurrentData();
-      records = currentData.records;
+      records = currentData.records || currentData.transactions || [];
     } else {
       // Direct data object (CSV)
-      records = data.records;
+      records = data.records || [];
+    }
+
+    // Ensure records is an array
+    if (!Array.isArray(records)) {
+      console.warn('⚠️ Records is not an array in prepareProfitData:', records);
+      records = [];
     }
 
     // Sample transactions for scatter plot
