@@ -1,23 +1,27 @@
 {
   "version": 2,
-  "buildCommand": "echo 'No build required for static site'",
-  "outputDirectory": ".",
-  "routes": [
+  "headers": [
     {
-      "src": "/(.*)",
-      "headers": {
-        "X-Content-Type-Options": "nosniff",
-        "X-Frame-Options": "DENY", 
-        "X-XSS-Protection": "1; mode=block",
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization"
-      }
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        }
+      ]
     }
   ],
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/",
       "destination": "/index.html"
     }
   ]
