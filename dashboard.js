@@ -1952,15 +1952,16 @@ class ChiefDashboard {
    */
   async loadDailyRecap() {
     const selectedDate = document.getElementById('recap-date').value;
-    if (!selectedDate || !this.currentData) {
-      this.showNotification('Please select a date and ensure data is loaded', 'warning');
+    if (!selectedDate) {
+      this.showNotification('Please select a date', 'warning');
       return;
     }
 
     try {
       console.log('📅 Loading daily recap for:', selectedDate);
 
-      const dailyData = this.dataService.getDailyRecap(this.currentData, selectedDate);
+      // Use the async method that queries Railway database directly
+      const dailyData = await this.dataService.getDailyRecap(selectedDate);
 
       if (!dailyData) {
         this.showNotification(`No data found for ${selectedDate}`, 'info');
