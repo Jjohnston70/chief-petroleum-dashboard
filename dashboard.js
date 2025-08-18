@@ -2752,7 +2752,7 @@ class ChiefDashboard {
 
       if (gp2024Data && gp2025Data) {
         console.log('📊 Creating GP charts with data...');
-        this.createGPComparisonChart(gp2024Data, gp2025Data);
+        await this.createGPComparisonChart(gp2024Data, gp2025Data);
         this.createGPTimelineChart(gp2024Data, gp2025Data);
       } else {
         console.warn('⚠️ GP data not loaded properly:', { gp2024Data, gp2025Data });
@@ -2775,15 +2775,15 @@ class ChiefDashboard {
   /**
    * Create GP comparison chart (2024 vs 2025)
    */
-  createGPComparisonChart(data2024, data2025) {
+  async createGPComparisonChart(data2024, data2025) {
     const canvas = document.getElementById('gp-comparison-chart');
     if (!canvas) return;
 
     const period = document.getElementById('gp-period-selector')?.value || 'monthly';
 
     // Prepare comparison data
-    const trends2024 = this.dataService.getSalesTrendData(data2024, period);
-    const trends2025 = this.dataService.getSalesTrendData(data2025, period);
+    const trends2024 = await this.dataService.getSalesTrendData(data2024, period);
+    const trends2025 = await this.dataService.getSalesTrendData(data2025, period);
 
     console.log('🔍 Debug GP Trends 2024:', trends2024);
     console.log('🔍 Debug GP Trends 2025:', trends2025);
