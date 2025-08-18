@@ -24,28 +24,49 @@ class ChiefDashboard {
   async init() {
     try {
       console.log('🚀 Initializing Chief Petroleum Dashboard...');
-      
+
+      // Set up global error handlers
+      this.setupGlobalErrorHandlers();
+
       // Initialize services
       this.databaseService = new DatabaseDataService(); // Railway database service
       this.dataService = new ChiefDataService(); // Google Sheets fallback
       this.dataService.dashboard = this; // Reference for filtered data access
       this.chartManager = new ChiefChartManager();
-      
+
       // Store reference for theme manager to access
       window.chartManager = this.chartManager;
-      
+
       // Set up event listeners
       this.setupEventListeners();
-      
+
       // Load initial data
       await this.loadDashboardData();
-      
+
       console.log('✅ Dashboard initialized successfully');
-      
+
     } catch (error) {
       console.error('❌ Dashboard initialization failed:', error);
       this.showError('Failed to initialize dashboard: ' + error.message);
     }
+  }
+
+  /**
+   * Set up global error handlers
+   */
+  setupGlobalErrorHandlers() {
+    // Handle unhandled promise rejections
+    window.addEventListener('unhandledrejection', (event) => {
+      console.error('❌ Unhandled promise rejection:', event.reason);
+      this.showNotification('An unexpected error occurred. Please try refreshing the page.', 'error');
+      event.preventDefault(); // Prevent the default browser error handling
+    });
+
+    // Handle general JavaScript errors
+    window.addEventListener('error', (event) => {
+      console.error('❌ JavaScript error:', event.error);
+      this.showNotification('A technical error occurred. Please try refreshing the page.', 'error');
+    });
   }
 
   /**
@@ -287,6 +308,19 @@ class ChiefDashboard {
       
     } catch (error) {
       this.hideLoading();
+      console.error('❌ Dashboard data loading failed:', error);
+
+      // Provide specific error messages based on error type
+      let userMessage = 'Failed to load dashboard data';
+      if (error.message.includes('health check failed')) {
+        userMessage = 'Cannot connect to database. Please check your internet connection and try again.';
+      } else if (error.message.includes('fetch')) {
+        userMessage = 'Network error while loading data. Please try refreshing the page.';
+      } else {
+        userMessage = `Failed to load data: ${error.message}`;
+      }
+
+      this.showNotification(userMessage, 'error');
       throw error;
     }
   }
@@ -458,9 +492,13 @@ class ChiefDashboard {
    * Update all charts based on current sheet
    */
   async updateCharts() {
-    if (!this.currentData || !this.chartManager) return;
+    if (!this.currentData || !this.chartManager) {
+      console.warn('⚠️ Cannot update charts: missing data or chart manager');
+      return;
+    }
 
-    console.log('📈 Updating charts...');
+    try {
+      console.log('📈 Updating charts...');
 
     // Determine data source and use appropriate service
     const isCSVData = this.currentData.source && this.currentData.source.includes('CSV Upload');
@@ -508,6 +546,11 @@ class ChiefDashboard {
       } else if (currentSheet === 'Data') {
         await this.showTransactionalCharts();
       }
+    }
+
+    } catch (error) {
+      console.error('❌ Error updating charts:', error);
+      this.showNotification(`Failed to update charts: ${error.message}`, 'error');
     }
   }
 
@@ -1307,21 +1350,7 @@ class ChiefDashboard {
     }, 100);
   }
 
-  /**
-   * Show notification (you could implement a toast notification)
-   */
-  showNotification(message) {
-    console.log('💡 Notification:', message);
-    
-    // Simple browser notification for now
-    // You could implement a custom toast component
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('Chief Petroleum Dashboard', {
-        body: message,
-        icon: '../Chief_logo.png'
-      });
-    }
-  }
+
 
   /**
    * Handle theme changes
