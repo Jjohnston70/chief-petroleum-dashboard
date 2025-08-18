@@ -301,10 +301,14 @@ class ChiefDataService {
    * Get daily recap for specific date
    */
   async getDailyRecap(targetDate) {
-    if (!this.databaseService) return null;
+    if (!this.databaseService) {
+      console.error('❌ Database service not available for daily recap');
+      return null;
+    }
 
     const dateStr = new Date(targetDate).toISOString().split('T')[0];
-    
+    console.log('📅 Getting daily recap for date:', dateStr);
+
     // Fetch transactions for specific date
     const response = await this.databaseService.fetchTransactions({
       startDate: dateStr,
@@ -312,8 +316,10 @@ class ChiefDataService {
     });
 
     const dayRecords = response.data || [];
-    
+    console.log(`📊 Found ${dayRecords.length} records for ${dateStr}`);
+
     if (dayRecords.length === 0) {
+      console.log('📅 No records found for date:', dateStr);
       return null;
     }
 

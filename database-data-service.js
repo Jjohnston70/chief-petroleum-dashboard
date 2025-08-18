@@ -17,22 +17,33 @@ class DatabaseDataService {
    */
   async fetchTransactions(filters = {}) {
     const cacheKey = `transactions_${JSON.stringify(filters)}`;
-    
+
     if (this.cache.has(cacheKey)) {
       const cached = this.cache.get(cacheKey);
       if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        console.log('📦 Using cached transactions data for filters:', filters);
         return cached.data;
       }
     }
 
+    console.log('🔍 Fetching transactions from Railway API with filters:', filters);
     const params = new URLSearchParams(filters);
-    const response = await fetch(`${this.apiBaseUrl}/api/transactions?${params}`);
-    
+    const url = `${this.apiBaseUrl}/api/transactions?${params}`;
+    console.log('🌐 API URL:', url);
+
+    const response = await fetch(url);
+
     if (!response.ok) {
+      console.error('❌ API request failed:', response.status, response.statusText);
       throw new Error(`HTTP ${response.status}: ${response.statusText}`);
     }
-    
+
     const data = await response.json();
+    console.log('✅ Received transactions data:', {
+      total: data.total || 0,
+      count: data.data ? data.data.length : 0,
+      filters: filters
+    });
 
     // Process dates in the response data
     if (data.data && Array.isArray(data.data)) {

@@ -81,7 +81,17 @@ class ChiefDashboard {
       });
     }
 
-    // Note: Sheet selector removed - using Railway database only
+    // Data source selector (restored functionality)
+    const sheetSelector = document.getElementById('sheet-selector');
+    if (sheetSelector) {
+      console.log('📊 Data source dropdown found, adding event listener');
+      sheetSelector.addEventListener('change', (e) => {
+        console.log('📊 Data source changed to:', e.target.value);
+        this.switchDataSource(e.target.value);
+      });
+    } else {
+      console.error('❌ Data source dropdown not found!');
+    }
 
     // Time period selector
     const timePeriodSelect = document.getElementById('time-period');
@@ -191,13 +201,13 @@ class ChiefDashboard {
     const testBtn = document.getElementById('test-btn');
     if (testBtn) {
       testBtn.addEventListener('click', () => {
-        this.testRailwayConnection();
+        this.testDataSourceDropdown();
       });
 
-      // Always show test button for Railway debugging
+      // Always show test button for debugging
       testBtn.style.display = 'inline-block';
-      testBtn.innerHTML = '<i class="fas fa-vial"></i> Test Railway';
-      testBtn.title = 'Test Railway Database Connection';
+      testBtn.innerHTML = '<i class="fas fa-vial"></i> Test Dropdown';
+      testBtn.title = 'Test Data Source Dropdown';
     }
 
     // Data explorer event listeners
@@ -298,10 +308,14 @@ class ChiefDashboard {
       this.updateDataTable();
       this.updateLastUpdated();
 
+      // Initialize data source dropdown
+      this.initializeDataSourceDropdown();
+
       // Load GP charts
       this.loadGPCharts();
 
       // Auto-load recap data for 2 business days ago
+      console.log('🔄 Auto-loading daily recap...');
       await this.loadDailyRecap();
 
       this.hideLoading();
@@ -1096,7 +1110,77 @@ class ChiefDashboard {
     }
   }
 
-  // Note: Data source toggle functionality removed - using Railway database only
+  /**
+   * Initialize data source dropdown with default value
+   */
+  initializeDataSourceDropdown() {
+    const sheetSelector = document.getElementById('sheet-selector');
+    if (sheetSelector) {
+      // Set default to "Current Data" (transactions)
+      sheetSelector.value = 'Data';
+      console.log('📊 Data source dropdown initialized to:', sheetSelector.value);
+    }
+  }
+
+  /**
+   * Switch data source based on dropdown selection
+   */
+  async switchDataSource(dataSource) {
+    if (this.isLoading) return;
+
+    try {
+      this.showLoading(`Loading ${dataSource}...`);
+      console.log(`🔄 Switching to data source: ${dataSource}`);
+
+      // Map dropdown values to data types
+      let dataType;
+      switch (dataSource) {
+        case 'Data':
+          dataType = 'transactions';
+          break;
+        case 'Data-gp-2025':
+          dataType = 'gp-2025';
+          break;
+        case 'Data-gp-2024':
+          dataType = 'gp-2024';
+          break;
+        case 'Recap-data':
+          dataType = 'recap';
+          break;
+        default:
+          dataType = 'transactions';
+      }
+
+      // Fetch data from the appropriate source
+      const newData = await this.dataService.fetchFuelData(dataType);
+
+      if (!newData) {
+        throw new Error(`No data available for ${dataSource}`);
+      }
+
+      // Update current data
+      this.currentData = newData;
+      this.currentData.source = 'Railway Database';
+      this.currentData.dataSource = 'Railway Database';
+
+      // Update all dashboard components
+      this.updateKPIs();
+      this.updateCharts();
+      this.updateDataTable();
+      this.updateLastUpdated();
+
+      // Update data source info
+      this.updateDataSourceInfo();
+
+      this.hideLoading();
+      this.showNotification(`Switched to ${dataSource}`, 'success');
+
+    } catch (error) {
+      this.hideLoading();
+      console.error('❌ Error switching data source:', error);
+      this.showError(`Failed to switch to ${dataSource}: ${error.message}`);
+    }
+  }
 
   /**
    * Update data range information display
@@ -1991,26 +2075,31 @@ class ChiefDashboard {
 
     try {
       console.log('📅 Loading daily recap for:', selectedDate);
+      this.showLoading(`Loading daily recap for ${selectedDate}...`);
 
       // Use the async method that queries Railway database directly
       const dailyData = await this.dataService.getDailyRecap(selectedDate);
 
       if (!dailyData) {
         console.log(`📅 No data found for ${selectedDate}, trying to find alternative date`);
+        this.hideLoading();
         this.showNotification(`No data found for ${selectedDate}. Try selecting a different date.`, 'info');
         this.hideDailyRecap();
 
         // Suggest alternative dates with data
-        this.suggestAlternativeRecapDates();
+        await this.suggestAlternativeRecapDates();
         return;
       }
 
       this.displayDailyRecap(dailyData);
+      this.hideLoading();
       this.showNotification(`Daily recap loaded for ${selectedDate}`, 'success');
 
     } catch (error) {
       console.error('❌ Error loading daily recap:', error);
+      this.hideLoading();
       this.showNotification(`Failed to load daily recap: ${error.message}`, 'error');
+      this.hideDailyRecap();
     }
   }
 
@@ -3038,6 +3127,40 @@ class ChiefDashboard {
       dropdownBtn.classList.remove('active');
       dropdownMenu.classList.remove('show');
     }
+  }
+
+  /**
+   * Test data source dropdown functionality
+   */
+  async testDataSourceDropdown() {
+    console.log('🧪 Testing data source dropdown...');
+
+    const sheetSelector = document.getElementById('sheet-selector');
+    if (!sheetSelector) {
+      console.error('❌ Data source dropdown not found!');
+      this.showNotification('Data source dropdown not found!', 'error');
+      return;
+    }
+
+    console.log('✅ Data source dropdown found');
+    console.log('📊 Current value:', sheetSelector.value);
+    console.log('📊 Available options:', Array.from(sheetSelector.options).map(opt => opt.value));
+
+    // Test switching to different data sources
+    const testSources = ['Data', 'Data-gp-2025', 'Data-gp-2024', 'Recap-data'];
+
+    for (const source of testSources) {
+      console.log(`🔄 Testing switch to: ${source}`);
+      try {
+        await this.switchDataSource(source);
+        console.log(`✅ Successfully switched to: ${source}`);
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between tests
+      } catch (error) {
+        console.error(`❌ Failed to switch to ${source}:`, error);
+      }
+    }
+
+    this.showNotification('Data source dropdown test completed - check console for results', 'info');
   }
 
   /**
