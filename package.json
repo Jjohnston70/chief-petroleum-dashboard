@@ -4,7 +4,7 @@
   "description": "Chief Petroleum Fuel Business Dashboard",
   "scripts": {
     "dev": "python -m http.server 8000",
-    "build": "echo 'No build required for static site'"
+    "build": "mkdir -p public && cp *.html *.css *.js *.png public/"
   },
   "keywords": ["dashboard", "fuel", "business", "analytics"],
   "author": "True North Data Strategies LLC",
