@@ -61,20 +61,7 @@ class ChiefDashboard {
       });
     }
 
-    // Sheet selector
-    const sheetSelector = document.getElementById('sheet-selector');
-    if (sheetSelector) {
-      sheetSelector.addEventListener('change', (e) => {
-        this.switchSheet(e.target.value);
-      });
-
-      // Restore saved sheet selection
-      const savedSheet = localStorage.getItem('chief-selected-sheet');
-      if (savedSheet && this.dataService.getAvailableSheets().includes(savedSheet)) {
-        sheetSelector.value = savedSheet;
-        this.dataService.setCurrentSheet(savedSheet);
-      }
-    }
+    // Note: Sheet selector removed - using Railway database only
 
     // Time period selector
     const timePeriodSelect = document.getElementById('time-period');

@@ -1,6 +1,6 @@
 /**
- * Chief Petroleum Data Service - Railway Postgres Primary with Fallback Support
- * Prioritizes Railway database API, with Google Sheets as legacy fallback only
+ * Chief Petroleum Data Service - Railway Postgres Database
+ * Handles all data operations through Railway database API
  */
 
 class ChiefDataService {
@@ -108,8 +108,8 @@ class ChiefDataService {
     
     // Transform to dashboard format
     const processedData = {
-      sheetName: 'Data',
-      sheetType: 'transactional',
+      dataName: 'transactions',
+      dataType: 'transactional',
       headers: ['Date', 'Customer', 'Product Type', 'Gallon Qty', 'Sales', 'Actual Profit By Item'],
       records: response.data || [],
       summary: this.calculateTransactionsSummary(response.data || [])
@@ -126,8 +126,8 @@ class ChiefDataService {
     
     // Transform to dashboard format
     const processedData = {
-      sheetName: `Data-gp-${year}`,
-      sheetType: 'yearly',
+      dataName: `gp-${year}`,
+      dataType: 'yearly',
       headers: this.getGPHeaders(year),
       records: response.data || [],
       summary: this.calculateGPSummary(response.data || [], year)
@@ -144,8 +144,8 @@ class ChiefDataService {
     
     // Transform to dashboard format
     const processedData = {
-      sheetName: 'Recap-data',
-      sheetType: 'summary',
+      dataName: 'recap',
+      dataType: 'summary',
       headers: ['Date', 'Driver', 'Company', 'Gallons', 'Profit', 'Delivery Fee', 'Margin'],
       records: response.data || [],
       summary: this.calculateRecapSummary(response.data || [])
@@ -399,10 +399,75 @@ class ChiefDataService {
   }
 
   /**
-   * Set current data type (for compatibility)
+   * Get current data type (alias for compatibility)
+   */
+  getCurrentSheet() {
+    return this.getCurrentDataType();
+  }
+
+  /**
+   * Set current data type (for compatibility - no-op since we only use database)
    */
   setCurrentSheet(dataType) {
-    console.log(`📋 Data type set to: ${dataType}`);
+    console.log(`📋 Data type set to: ${dataType} (Railway database mode)`);
+  }
+
+  /**
+   * Get available data types (for compatibility)
+   */
+  getAvailableSheets() {
+    return ['transactions', 'gp-2024', 'gp-2025', 'recap'];
+  }
+
+  /**
+   * Get data type information (for compatibility)
+   */
+  getSheetInfo(dataType) {
+    const infoMap = {
+      'transactions': { type: 'transactional', description: 'Transaction Data' },
+      'Data': { type: 'transactional', description: 'Transaction Data' },
+      'gp-2024': { type: 'yearly', description: '2024 GP Data' },
+      'Data-gp-2024': { type: 'yearly', description: '2024 GP Data' },
+      'gp-2025': { type: 'yearly', description: '2025 GP Data' },
+      'Data-gp-2025': { type: 'yearly', description: '2025 GP Data' },
+      'recap': { type: 'summary', description: 'Recap Data' },
+      'Recap-data': { type: 'summary', description: 'Recap Data' }
+    };
+    return infoMap[dataType] || { type: 'unknown', description: 'Unknown Data Type' };
+  }
+
+  /**
+   * Get daily recap data
+   */
+  getDailyRecap(data, selectedDate) {
+    if (!data || !data.records) return null;
+
+    const targetDate = new Date(selectedDate).toDateString();
+    return data.records.filter(record => {
+      const recordDate = new Date(record.Date || record.date).toDateString();
+      return recordDate === targetDate;
+    });
+  }
+
+  /**
+   * Get year over year data
+   */
+  async getYearOverYearData() {
+    try {
+      const [data2024, data2025] = await Promise.all([
+        this.fetchFuelData('gp-2024'),
+        this.fetchFuelData('gp-2025')
+      ]);
+
+      return {
+        hasPartialData: !!(data2024 && data2025),
+        data2024,
+        data2025
+      };
+    } catch (error) {
+      console.error('Error fetching year over year data:', error);
+      return { hasPartialData: false };
+    }
   }
 
   /**
