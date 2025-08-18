@@ -933,14 +933,35 @@ class ChiefDashboard {
       this.showError('No data available to export');
       return;
     }
-    
+
     try {
       console.log('📊 Exporting data...');
-      
-      // Prepare CSV data
-      const headers = this.currentData.headers;
-      const records = this.currentData.records;
-      
+
+      // Prepare CSV data - handle both Railway database and CSV/Sheets data structures
+      let headers, records;
+
+      if (this.currentData.headers) {
+        // CSV/Sheets data structure
+        headers = this.currentData.headers;
+        records = this.currentData.records;
+      } else if (this.currentData.records && this.currentData.records.length > 0) {
+        // Railway database structure - generate headers from first record
+        headers = Object.keys(this.currentData.records[0]);
+        records = this.currentData.records;
+      } else if (this.currentData.transactions && this.currentData.transactions.length > 0) {
+        // Alternative Railway structure using transactions field
+        headers = Object.keys(this.currentData.transactions[0]);
+        records = this.currentData.transactions;
+      } else {
+        this.showError('No data available to show headers');
+        return;
+      }
+
+      if (!headers || !records) {
+        this.showError('Unable to determine data structure for export');
+        return;
+      }
+
       let csvContent = headers.join(',') + '\n';
       
       records.forEach(record => {
