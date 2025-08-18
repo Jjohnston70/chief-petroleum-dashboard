@@ -443,10 +443,120 @@ class ChiefDataService {
     if (!data || !data.records) return null;
 
     const targetDate = new Date(selectedDate).toDateString();
-    return data.records.filter(record => {
+    const dayRecords = data.records.filter(record => {
       const recordDate = new Date(record.Date || record.date).toDateString();
       return recordDate === targetDate;
     });
+
+    if (dayRecords.length === 0) return null;
+
+    // Calculate metrics
+    const metrics = this.calculateDailyMetrics(dayRecords);
+
+    // Calculate breakdowns
+    const productBreakdown = this.calculateProductBreakdown(dayRecords);
+    const customerBreakdown = this.calculateCustomerBreakdown(dayRecords);
+
+    return {
+      metrics,
+      productBreakdown,
+      customerBreakdown,
+      records: dayRecords
+    };
+  }
+
+  /**
+   * Calculate daily metrics from records
+   */
+  calculateDailyMetrics(records) {
+    let totalSales = 0;
+    let totalGallons = 0;
+    let totalProfit = 0;
+    const uniqueCustomers = new Set();
+
+    records.forEach(record => {
+      totalSales += parseFloat(record.Sales || record.sales || 0);
+      totalGallons += parseFloat(record['Gallon Qty'] || record.gallons || 0);
+      totalProfit += parseFloat(record['Actual Profit By Item'] || record.profit || 0);
+
+      const customer = record.Customer || record.customer;
+      if (customer) {
+        uniqueCustomers.add(customer);
+      }
+    });
+
+    const avgProfitMargin = totalSales > 0 ? (totalProfit / totalSales) * 100 : 0;
+
+    return {
+      totalDeliveries: records.length,
+      totalSales,
+      totalGallons,
+      totalProfit,
+      uniqueCustomers: uniqueCustomers.size,
+      avgProfitMargin
+    };
+  }
+
+  /**
+   * Calculate product breakdown from records
+   */
+  calculateProductBreakdown(records) {
+    const productMap = {};
+
+    records.forEach(record => {
+      const product = record['Product Type'] || record.product || 'Unknown';
+      const sales = parseFloat(record.Sales || record.sales || 0);
+      const gallons = parseFloat(record['Gallon Qty'] || record.gallons || 0);
+      const profit = parseFloat(record['Actual Profit By Item'] || record.profit || 0);
+
+      if (!productMap[product]) {
+        productMap[product] = {
+          product,
+          sales: 0,
+          gallons: 0,
+          profit: 0,
+          deliveries: 0
+        };
+      }
+
+      productMap[product].sales += sales;
+      productMap[product].gallons += gallons;
+      productMap[product].profit += profit;
+      productMap[product].deliveries += 1;
+    });
+
+    return Object.values(productMap).sort((a, b) => b.sales - a.sales);
+  }
+
+  /**
+   * Calculate customer breakdown from records
+   */
+  calculateCustomerBreakdown(records) {
+    const customerMap = {};
+
+    records.forEach(record => {
+      const customer = record.Customer || record.customer || 'Unknown';
+      const sales = parseFloat(record.Sales || record.sales || 0);
+      const gallons = parseFloat(record['Gallon Qty'] || record.gallons || 0);
+      const profit = parseFloat(record['Actual Profit By Item'] || record.profit || 0);
+
+      if (!customerMap[customer]) {
+        customerMap[customer] = {
+          customer,
+          sales: 0,
+          gallons: 0,
+          profit: 0,
+          deliveries: 0
+        };
+      }
+
+      customerMap[customer].sales += sales;
+      customerMap[customer].gallons += gallons;
+      customerMap[customer].profit += profit;
+      customerMap[customer].deliveries += 1;
+    });
+
+    return Object.values(customerMap).sort((a, b) => b.sales - a.sales);
   }
 
   /**
