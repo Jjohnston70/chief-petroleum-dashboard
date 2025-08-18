@@ -1,5 +1,5 @@
 // Chief Petroleum Dashboard - Database Data Service
-// Replaces CSV processing with Railway database API calls
+// FIXED: Correct API endpoint mapping for all four Railway tables
 
 class DatabaseDataService {
   constructor() {
@@ -13,7 +13,7 @@ class DatabaseDataService {
   }
 
   /**
-   * Fetch transactions with filtering
+   * FIXED: Fetch transactions with filtering
    */
   async fetchTransactions(filters = {}) {
     const cacheKey = `transactions_${JSON.stringify(filters)}`;
@@ -60,7 +60,99 @@ class DatabaseDataService {
   }
 
   /**
-   * Fetch KPIs with filtering
+   * FIXED: Fetch GP data for specific year with correct endpoint
+   */
+  async fetchGPData(year, filters = {}) {
+    const cacheKey = `gp_${year}_${JSON.stringify(filters)}`;
+    
+    if (this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        console.log(`📦 Using cached GP ${year} data`);
+        return cached.data;
+      }
+    }
+
+    console.log(`🔍 Fetching GP ${year} data from Railway API...`);
+    const params = new URLSearchParams(filters);
+    const url = `${this.apiBaseUrl}/api/gp-data/${year}?${params}`;
+    console.log('🌐 GP API URL:', url);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error(`❌ GP ${year} API request failed:`, response.status, response.statusText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText} for GP ${year} data`);
+    }
+    
+    const data = await response.json();
+    console.log(`✅ Received GP ${year} data:`, {
+      total: data.total || 0,
+      count: data.data ? data.data.length : 0
+    });
+
+    // Process dates in the response data
+    if (data.data && Array.isArray(data.data)) {
+      data.data = data.data.map(record => this.processRecordDates(record));
+    }
+
+    // Cache the result
+    this.cache.set(cacheKey, {
+      data: data,
+      timestamp: Date.now()
+    });
+
+    return data;
+  }
+
+  /**
+   * FIXED: Fetch recap data with correct endpoint
+   */
+  async fetchRecapData(filters = {}) {
+    const cacheKey = `recap_${JSON.stringify(filters)}`;
+    
+    if (this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey);
+      if (Date.now() - cached.timestamp < this.cacheTimeout) {
+        console.log('📦 Using cached recap data');
+        return cached.data;
+      }
+    }
+
+    console.log('🔍 Fetching recap data from Railway API...');
+    const params = new URLSearchParams(filters);
+    const url = `${this.apiBaseUrl}/api/recap-data?${params}`;
+    console.log('🌐 Recap API URL:', url);
+    
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.error('❌ Recap API request failed:', response.status, response.statusText);
+      throw new Error(`HTTP ${response.status}: ${response.statusText} for recap data`);
+    }
+    
+    const data = await response.json();
+    console.log('✅ Received recap data:', {
+      total: data.total || 0,
+      count: data.data ? data.data.length : 0
+    });
+
+    // Process dates in the response data
+    if (data.data && Array.isArray(data.data)) {
+      data.data = data.data.map(record => this.processRecordDates(record));
+    }
+
+    // Cache the result
+    this.cache.set(cacheKey, {
+      data: data,
+      timestamp: Date.now()
+    });
+
+    return data;
+  }
+
+  /**
+   * FIXED: Fetch KPIs with filtering
    */
   async fetchKPIs(filters = {}) {
     const cacheKey = `kpis_${JSON.stringify(filters)}`;
@@ -91,79 +183,7 @@ class DatabaseDataService {
   }
 
   /**
-   * Fetch GP data for specific year
-   */
-  async fetchGPData(year, filters = {}) {
-    const cacheKey = `gp_${year}_${JSON.stringify(filters)}`;
-    
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data;
-      }
-    }
-
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${this.apiBaseUrl}/api/gp-data/${year}?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-
-    // Process dates in the response data
-    if (data.data && Array.isArray(data.data)) {
-      data.data = data.data.map(record => this.processRecordDates(record));
-    }
-
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: data,
-      timestamp: Date.now()
-    });
-
-    return data;
-  }
-
-  /**
-   * Fetch recap data
-   */
-  async fetchRecapData(filters = {}) {
-    const cacheKey = `recap_${JSON.stringify(filters)}`;
-    
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data;
-      }
-    }
-
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${this.apiBaseUrl}/api/recap-data?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-
-    // Process dates in the response data
-    if (data.data && Array.isArray(data.data)) {
-      data.data = data.data.map(record => this.processRecordDates(record));
-    }
-
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: data,
-      timestamp: Date.now()
-    });
-
-    return data;
-  }
-
-  /**
-   * Fetch GP data for specific year
+   * FIXED: Get GP data for specific year (alias method)
    */
   async getGPData(year) {
     const cacheKey = `gp_data_${year}`;
@@ -175,16 +195,11 @@ class DatabaseDataService {
       }
     }
 
-    const response = await fetch(`${this.apiBaseUrl}/api/gp-data/${year}`);
-
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-
-    const data = await response.json();
+    console.log(`🔍 Getting GP data for year ${year}...`);
+    const response = await this.fetchGPData(year);
 
     // Process for dashboard compatibility
-    const processedData = this.processDataForDashboard(data, `gp-${year}`);
+    const processedData = this.processDataForDashboard(response, `gp-${year}`);
 
     // Cache the result
     this.cache.set(cacheKey, {
@@ -196,102 +211,22 @@ class DatabaseDataService {
   }
 
   /**
-   * Fetch customer summary
-   */
-  async fetchCustomers(limit = 100) {
-    const cacheKey = `customers_${limit}`;
-    
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data;
-      }
-    }
-
-    const response = await fetch(`${this.apiBaseUrl}/api/customers?limit=${limit}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: data,
-      timestamp: Date.now()
-    });
-    
-    return data;
-  }
-
-  /**
-   * Fetch product summary
-   */
-  async fetchProducts() {
-    const cacheKey = 'products';
-    
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data;
-      }
-    }
-
-    const response = await fetch(`${this.apiBaseUrl}/api/products`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: data,
-      timestamp: Date.now()
-    });
-    
-    return data;
-  }
-
-  /**
-   * Fetch daily summary
-   */
-  async fetchDailySummary(filters = {}) {
-    const cacheKey = `daily_summary_${JSON.stringify(filters)}`;
-    
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey);
-      if (Date.now() - cached.timestamp < this.cacheTimeout) {
-        return cached.data;
-      }
-    }
-
-    const params = new URLSearchParams(filters);
-    const response = await fetch(`${this.apiBaseUrl}/api/daily-summary?${params}`);
-    
-    if (!response.ok) {
-      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    // Cache the result
-    this.cache.set(cacheKey, {
-      data: data,
-      timestamp: Date.now()
-    });
-    
-    return data;
-  }
-
-  /**
-   * Process data for dashboard compatibility
+   * FIXED: Process data for dashboard compatibility
    * Transforms database response to match existing dashboard expectations
    */
   processDataForDashboard(data, dataType) {
-    if (!data || !data.data) return null;
+    if (!data || !data.data) {
+      console.warn(`⚠️ No data received for ${dataType}`);
+      return {
+        sheetName: dataType,
+        sheetType: this.getSheetType(dataType),
+        headers: this.getHeaders(dataType),
+        records: [],
+        summary: this.calculateSummary([], dataType)
+      };
+    }
+
+    console.log(`📊 Processing ${data.data.length} records for ${dataType}`);
 
     const processedData = {
       sheetName: dataType,
@@ -322,16 +257,16 @@ class DatabaseDataService {
   }
 
   /**
-   * Get headers for compatibility - Updated to match processed column names
+   * FIXED: Get headers for compatibility - Updated to match Railway API field names
    */
   getHeaders(dataType) {
     switch (dataType) {
       case 'transactions':
-        return ['Date', 'Customer', 'Customer-Address', 'Product Type', 'Gallon Qty', 'Actual Profit By Item', 'Sales'];
+        return ['date', 'customer', 'customer_address', 'product_type', 'gallon_qty', 'actual_profit', 'sales'];
       case 'gp-2024':
-        return ['Date', 'Dooley_Daily', 'Dooley_Rolling', 'Chief_Daily', 'Chief_Rolling', 'Sales', 'Goal', 'Gallon Qty'];
+        return ['date', 'dooley_daily', 'dooley_rolling', 'chief_daily', 'chief_rolling', 'sales', 'goal'];
       case 'gp-2025':
-        return ['Date', 'TW_Goal', 'TW_Actual', 'Hauling_Goal', 'Hauling_Actual', 'Transport_Goal', 'Transport_Actual', 'Lubes_Goal', 'Lubes_Actual', 'Chief_Goal', 'Chief_Actual', 'Sales', 'Goal', 'Gallon Qty'];
+        return ['date', 'tw_goal', 'tw_actual', 'hauling_goal', 'hauling_actual', 'transport_goal', 'transport_actual', 'lubes_goal', 'lubes_actual', 'chief_goal', 'chief_actual'];
       case 'recap':
         return ['date', 'driver', 'company', 'gallons', 'profit_includes_delivery_fee', 'delivery_fee', 'margin', 'opis_true'];
       default:
@@ -340,7 +275,7 @@ class DatabaseDataService {
   }
 
   /**
-   * Calculate summary for compatibility
+   * FIXED: Calculate summary for compatibility with proper field mapping
    */
   calculateSummary(records, dataType) {
     if (!records || records.length === 0) {
@@ -350,7 +285,9 @@ class DatabaseDataService {
         totalProfit: 0,
         recordCount: 0,
         customers: new Set(),
-        productTypes: new Set()
+        productTypes: new Set(),
+        activeCustomers: 0,
+        avgProfitMargin: 0
       };
     }
 
@@ -365,6 +302,7 @@ class DatabaseDataService {
 
     records.forEach(record => {
       if (dataType === 'transactions') {
+        // Use Railway API field names (lowercase with underscores)
         summary.totalSales += parseFloat(record.sales || 0);
         summary.totalGallons += parseFloat(record.gallon_qty || 0);
         summary.totalProfit += parseFloat(record.actual_profit || 0);
@@ -373,21 +311,154 @@ class DatabaseDataService {
       } else if (dataType === 'recap') {
         summary.totalSales += parseFloat(record.profit_includes_delivery_fee || 0);
         summary.totalGallons += parseFloat(record.gallons || 0);
+        summary.totalProfit += parseFloat(record.profit_includes_delivery_fee || 0);
         if (record.company) summary.customers.add(record.company);
+        if (record.driver) summary.productTypes.add(record.driver);
+      } else if (dataType.includes('gp-')) {
+        // GP data has different structure
+        summary.totalSales += parseFloat(record.chief_actual || record.sales || 0);
+        summary.totalGallons += parseFloat(record.gallons || 0);
+        summary.totalProfit += parseFloat(record.profit || 0);
       }
     });
 
     summary.activeCustomers = summary.customers.size;
     summary.productTypeCount = summary.productTypes.size;
+    summary.avgProfitMargin = summary.totalSales > 0 ? (summary.totalProfit / summary.totalSales) * 100 : 0;
 
     return summary;
   }
 
   /**
-   * Clear cache
+   * FIXED: Get sales trend data for charts with proper field mapping
    */
-  clearCache() {
-    this.cache.clear();
+  getSalesTrendData(data, period = 'monthly') {
+    const trendMap = {};
+
+    // Handle both data structures (with .transactions, .records, or direct .data)
+    const transactions = data.transactions || data.records || data.data || [];
+
+    if (!Array.isArray(transactions) || transactions.length === 0) {
+      console.warn('⚠️ No transactions data for trend analysis');
+      return [];
+    }
+
+    transactions.forEach(record => {
+      // Try multiple date field names
+      const dateStr = record['date'] || record['Date'] || record['transaction_date'];
+      if (!dateStr) return;
+
+      const date = new Date(dateStr);
+      if (isNaN(date.getTime())) return;
+
+      let key;
+      if (period === 'daily') {
+        key = date.toISOString().split('T')[0];
+      } else if (period === 'weekly') {
+        const weekStart = new Date(date);
+        weekStart.setDate(date.getDate() - date.getDay());
+        key = weekStart.toISOString().split('T')[0];
+      } else { // monthly
+        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      }
+
+      if (!trendMap[key]) {
+        trendMap[key] = {
+          period: key,
+          sales: 0,
+          gallons: 0,
+          profit: 0,
+          transactions: 0
+        };
+      }
+
+      // Use Railway API field names (lowercase with underscores)
+      trendMap[key].sales += parseFloat(record['sales'] || record['Sales'] || 0);
+      trendMap[key].gallons += parseFloat(record['gallon_qty'] || record['Gallon Qty'] || 0);
+      trendMap[key].profit += parseFloat(record['actual_profit'] || record['Actual Profit By Item'] || 0);
+      trendMap[key].transactions++;
+    });
+
+    return Object.values(trendMap).sort((a, b) => a.period.localeCompare(b.period));
+  }
+
+  /**
+   * FIXED: Get top customers with proper field mapping
+   */
+  getTopCustomers(data, limit = 5) {
+    const customerMap = {};
+
+    // Handle both data structures
+    const transactions = data.transactions || data.records || data.data || [];
+
+    if (!Array.isArray(transactions)) {
+      console.warn('⚠️ No valid transactions data for customer analysis');
+      return [];
+    }
+
+    transactions.forEach(record => {
+      // Try multiple customer field names
+      const customer = record['customer'] || record['Customer'] || record['customer_name'] || 'Unknown Customer';
+
+      if (!customerMap[customer]) {
+        customerMap[customer] = {
+          name: customer,
+          sales: 0,
+          gallons: 0,
+          profit: 0,
+          transactions: 0
+        };
+      }
+
+      // Use Railway API field names
+      customerMap[customer].sales += parseFloat(record['sales'] || record['Sales'] || 0);
+      customerMap[customer].gallons += parseFloat(record['gallon_qty'] || record['Gallon Qty'] || 0);
+      customerMap[customer].profit += parseFloat(record['actual_profit'] || record['Actual Profit By Item'] || 0);
+      customerMap[customer].transactions++;
+    });
+
+    return Object.values(customerMap)
+      .sort((a, b) => b.sales - a.sales)
+      .slice(0, limit);
+  }
+
+  /**
+   * FIXED: Get product type analysis with proper field mapping
+   */
+  getProductTypeAnalysis(data) {
+    const productMap = {};
+
+    // Handle both data structures
+    const transactions = data.transactions || data.records || data.data || [];
+
+    if (!Array.isArray(transactions)) {
+      console.warn('⚠️ No valid transactions data for product analysis');
+      return [];
+    }
+
+    transactions.forEach(record => {
+      // Try multiple product field names
+      const product = record['product_type'] || record['Product Type'] || record['Product'] || 'Unknown';
+
+      if (!productMap[product]) {
+        productMap[product] = {
+          type: product,  // Use 'type' for chart compatibility
+          product: product,
+          gallons: 0,
+          sales: 0,
+          profit: 0,
+          transactions: 0
+        };
+      }
+
+      // Use Railway API field names
+      productMap[product].gallons += parseFloat(record['gallon_qty'] || record['Gallon Qty'] || 0);
+      productMap[product].sales += parseFloat(record['sales'] || record['Sales'] || 0);
+      productMap[product].profit += parseFloat(record['actual_profit'] || record['Actual Profit By Item'] || 0);
+      productMap[product].transactions++;
+    });
+
+    return Object.values(productMap).filter(item => item.sales > 0);
   }
 
   /**
@@ -416,7 +487,7 @@ class DatabaseDataService {
     // Check field name patterns
     const dateFieldPatterns = [
       /date/i, /Date/, /DATE/,
-      /Dates25_1/, /Date24/, /Dates24/, /Dates25/
+      /transaction_date/i, /created_at/i, /updated_at/i
     ];
 
     const isDateFieldName = dateFieldPatterns.some(pattern => pattern.test(fieldName));
@@ -427,7 +498,8 @@ class DatabaseDataService {
       (typeof value === 'string' && (
         value.startsWith('Date(') ||
         value.match(/^\d{4}-\d{2}-\d{2}/) ||
-        value.match(/^\d{1,2}\/\d{1,2}\/\d{4}/)
+        value.match(/^\d{1,2}\/\d{1,2}\/\d{4}/) ||
+        value.includes('T') && value.includes('Z') // ISO format
       ))
     );
 
@@ -445,6 +517,14 @@ class DatabaseDataService {
       return dateValue.toISOString().split('T')[0]; // YYYY-MM-DD
     }
 
+    // Handle ISO date strings
+    if (typeof dateValue === 'string' && dateValue.includes('T')) {
+      const date = new Date(dateValue);
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split('T')[0];
+      }
+    }
+
     // Handle Date constructor strings like "Date(2025,0,3)"
     if (typeof dateValue === 'string' && dateValue.startsWith('Date(')) {
       const match = dateValue.match(/Date\((\d+),(\d+),(\d+)\)/);
@@ -460,6 +540,11 @@ class DatabaseDataService {
     if (typeof dateValue === 'string') {
       const cleanDate = dateValue.trim();
 
+      // Handle YYYY-MM-DD format (already correct)
+      if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return cleanDate;
+      }
+
       // Handle MM/DD/YYYY format
       if (cleanDate.match(/^\d{1,2}\/\d{1,2}\/\d{4}$/)) {
         const [month, day, year] = cleanDate.split('/');
@@ -467,11 +552,6 @@ class DatabaseDataService {
         if (!isNaN(date.getTime())) {
           return date.toISOString().split('T')[0];
         }
-      }
-
-      // Handle YYYY-MM-DD format (already correct)
-      if (cleanDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return cleanDate;
       }
 
       // Try general date parsing
@@ -486,15 +566,48 @@ class DatabaseDataService {
   }
 
   /**
+   * Clear cache
+   */
+  clearCache() {
+    this.cache.clear();
+    console.log('🗑️ Database cache cleared');
+  }
+
+  /**
    * Health check
    */
   async healthCheck() {
     try {
       const response = await fetch(`${this.apiBaseUrl}/health`);
-      return response.ok;
+      const isHealthy = response.ok;
+      console.log(`🏥 Health check: ${isHealthy ? '✅ Healthy' : '❌ Failed'}`);
+      return isHealthy;
     } catch (error) {
+      console.error('❌ Health check failed:', error);
       return false;
     }
+  }
+
+  /**
+   * Get current data from cache or recent fetch
+   */
+  getCurrentData() {
+    // Return the most recent cached data or empty structure
+    const cachedTransactions = this.cache.get('transactions_{}');
+
+    if (cachedTransactions && cachedTransactions.data) {
+      return {
+        transactions: cachedTransactions.data.data || [],
+        records: cachedTransactions.data.data || [], // Alias for compatibility
+        total: cachedTransactions.data.total || 0
+      };
+    }
+
+    return {
+      transactions: [],
+      records: [],
+      total: 0
+    };
   }
 
   /**
@@ -510,190 +623,6 @@ class DatabaseDataService {
 
   async getRecapData(filters = {}) {
     return await this.fetchRecapData(filters);
-  }
-
-  /**
-   * Get current data from cache or recent fetch
-   * @returns {Object} Current data object with transactions
-   */
-  getCurrentData() {
-    // Return the most recent cached data or empty structure
-    const cachedTransactions = this.cache.get('transactions_{}');
-
-    if (cachedTransactions && cachedTransactions.data) {
-      return {
-        transactions: cachedTransactions.data.data || [],
-        total: cachedTransactions.data.total || 0
-      };
-    }
-
-    return {
-      transactions: [],
-      total: 0
-    };
-  }
-
-  /**
-   * Get sales trend data for charts
-   * @param {Object} data - Data object containing transactions
-   * @param {string} period - Period type: 'daily', 'weekly', or 'monthly'
-   * @returns {Array} Array of trend data points
-   */
-  getSalesTrendData(data, period = 'monthly') {
-    const trendMap = {};
-
-    // Handle both data structures (with .transactions or .records)
-    const transactions = data.transactions || data.records || [];
-
-    transactions.forEach(record => {
-      const dateStr = record['Date'] || record['date'];
-      if (!dateStr) return;
-
-      const date = new Date(dateStr);
-      if (isNaN(date.getTime())) return;
-
-      let key;
-      if (period === 'daily') {
-        key = date.toISOString().split('T')[0];
-      } else if (period === 'weekly') {
-        const weekStart = new Date(date);
-        weekStart.setDate(date.getDate() - date.getDay());
-        key = weekStart.toISOString().split('T')[0];
-      } else { // monthly
-        key = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-      }
-
-      if (!trendMap[key]) {
-        trendMap[key] = {
-          period: key,
-          sales: 0,
-          gallons: 0,
-          profit: 0,
-          transactions: 0
-        };
-      }
-
-      // Handle different field names from Railway API
-      trendMap[key].sales += parseFloat(record['Sales'] || record['sales'] || 0);
-      trendMap[key].gallons += parseFloat(record['Gallon Qty'] || record['gallon_qty'] || 0);
-      trendMap[key].profit += parseFloat(record['Actual Profit By Item'] || record['actual_profit_by_item'] || 0);
-      trendMap[key].transactions++;
-    });
-
-    return Object.values(trendMap).sort((a, b) => a.period.localeCompare(b.period));
-  }
-
-  /**
-   * Get product type analysis
-   * @param {Object} data - Data object containing transactions
-   * @returns {Array} Array of product analysis data
-   */
-  getProductTypeAnalysis(data) {
-    const productMap = {};
-
-    // Handle both data structures
-    const transactions = data.transactions || data.records || [];
-
-    transactions.forEach(record => {
-      const product = record['Product Type'] || record['product_type'] || 'Unknown';
-
-      if (!productMap[product]) {
-        productMap[product] = {
-          type: product,  // Use 'type' for chart compatibility
-          product: product,
-          gallons: 0,
-          sales: 0,
-          profit: 0,
-          transactions: 0
-        };
-      }
-
-      productMap[product].gallons += parseFloat(record['Gallon Qty'] || record['gallon_qty'] || 0);
-      productMap[product].sales += parseFloat(record['Sales'] || record['sales'] || 0);
-      productMap[product].profit += parseFloat(record['Actual Profit By Item'] || record['actual_profit_by_item'] || 0);
-      productMap[product].transactions++;
-    });
-
-    return Object.values(productMap);
-  }
-
-  /**
-   * Get customer analysis
-   * @param {Object} data - Data object containing transactions
-   * @returns {Array} Array of customer analysis data
-   */
-  getCustomerAnalysis(data) {
-    const customerMap = {};
-
-    // Handle both data structures
-    const transactions = data.transactions || data.records || [];
-
-    transactions.forEach(record => {
-      const customer = record['Customer Name'] || record['customer_name'] || 'Unknown';
-
-      if (!customerMap[customer]) {
-        customerMap[customer] = {
-          customer: customer,
-          totalSales: 0,
-          totalGallons: 0,
-          totalProfit: 0,
-          transactionCount: 0,
-          avgTransaction: 0
-        };
-      }
-
-      customerMap[customer].totalSales += parseFloat(record['Sales'] || record['sales'] || 0);
-      customerMap[customer].totalGallons += parseFloat(record['Gallon Qty'] || record['gallon_qty'] || 0);
-      customerMap[customer].totalProfit += parseFloat(record['Actual Profit By Item'] || record['actual_profit_by_item'] || 0);
-      customerMap[customer].transactionCount++;
-    });
-
-    // Calculate averages
-    Object.values(customerMap).forEach(customer => {
-      customer.avgTransaction = customer.transactionCount > 0
-        ? customer.totalSales / customer.transactionCount
-        : 0;
-    });
-
-    return Object.values(customerMap)
-      .sort((a, b) => b.totalSales - a.totalSales)
-      .slice(0, 20); // Top 20 customers
-  }
-
-  /**
-   * Get top customers by sales (for chart compatibility)
-   * @param {Object} data - Data object containing transactions
-   * @param {number} limit - Number of top customers to return
-   * @returns {Array} Array of top customer data
-   */
-  getTopCustomers(data, limit = 5) {
-    const customerMap = {};
-
-    // Handle both data structures
-    const transactions = data.transactions || data.records || [];
-
-    transactions.forEach(record => {
-      const customer = record['Customer'] || record['Customer Name'] || record['customer_name'] || 'Unknown Customer';
-
-      if (!customerMap[customer]) {
-        customerMap[customer] = {
-          name: customer,
-          sales: 0,
-          gallons: 0,
-          profit: 0,
-          transactions: 0
-        };
-      }
-
-      customerMap[customer].sales += parseFloat(record['Sales'] || record['sales'] || 0);
-      customerMap[customer].gallons += parseFloat(record['Gallon Qty'] || record['gallon_qty'] || 0);
-      customerMap[customer].profit += parseFloat(record['Actual Profit By Item'] || record['actual_profit_by_item'] || 0);
-      customerMap[customer].transactions++;
-    });
-
-    return Object.values(customerMap)
-      .sort((a, b) => b.sales - a.sales)
-      .slice(0, limit);
   }
 }
 
