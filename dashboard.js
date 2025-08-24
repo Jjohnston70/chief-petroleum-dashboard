@@ -21,6 +21,8 @@ class ChiefDashboard {
     this.columnMappings = {}; // Store column mappings
     this.mappingTemplates = {}; // Store saved mapping templates
     this.pendingUpload = null; // Store pending upload data
+    this.isRecapUpload = false; // Flag to track if current upload is recap data
+    this.recapDatasetName = null; // Store recap dataset name
 
     this.init();
   }
@@ -1694,43 +1696,25 @@ class ChiefDashboard {
     }
 
     try {
-      this.showLoading(`Processing recap data: ${datasetName}...`);
+      this.showLoading('Analyzing recap CSV structure...');
 
-      // Read the CSV file
+      // Read and analyze the CSV file using enhanced system
       const csvText = await this.readCSVFile(file);
-
-      // Parse and process the CSV data specifically for recap
-      const processedData = this.processRecapCSVData(csvText, datasetName);
-
-      // Store the recap dataset separately
-      if (!this.uploadedRecapDatasets) {
-        this.uploadedRecapDatasets = {};
-      }
-      this.uploadedRecapDatasets[datasetName] = processedData;
-      this.currentRecapData = processedData;
-      this.currentRecapDataset = datasetName;
-
-      // Update recap dataset switcher
-      this.updateRecapDatasetSwitcher(datasetName);
-
-      // Update recap data range info and set default date
-      this.updateRecapDataRange();
-      this.setDefaultRecapDateWithData();
+      const analysis = this.analyzeCSVStructure(csvText);
 
       this.hideLoading();
 
-      // Show success message
-      this.showNotification(`Recap dataset "${datasetName}" uploaded successfully!
-        📊 Processed ${processedData.records.length} recap records`, 'success');
+      // Set flag to indicate this is a recap upload
+      this.isRecapUpload = true;
+      this.recapDatasetName = datasetName;
 
-      // Clear the inputs
-      fileInput.value = '';
-      datasetNameInput.value = '';
+      // Show column mapping modal for recap data
+      this.showColumnMappingModal(file, analysis);
 
     } catch (error) {
       this.hideLoading();
-      console.error('❌ Error processing recap CSV file:', error);
-      this.showNotification('Error processing recap CSV file: ' + error.message, 'error');
+      console.error('❌ Error analyzing recap CSV file:', error);
+      this.showNotification('Error analyzing recap CSV file: ' + error.message, 'error');
     }
   }
 
@@ -2712,6 +2696,18 @@ class ChiefDashboard {
 
     this.pendingUpload = { file, analysis };
 
+    // Update modal title and instructions based on upload type
+    const modalTitle = modal.querySelector('.modal-header h2');
+    const instructions = modal.querySelector('.mapping-instructions p');
+
+    if (this.isRecapUpload) {
+      if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-columns"></i> Recap Data Column Mapping';
+      if (instructions) instructions.textContent = 'Map your recap CSV columns to dashboard fields. The system has detected the following columns:';
+    } else {
+      if (modalTitle) modalTitle.innerHTML = '<i class="fas fa-columns"></i> Column Mapping';
+      if (instructions) instructions.textContent = 'Map your CSV columns to dashboard fields. The system has detected the following columns:';
+    }
+
     // Populate CSV columns
     this.populateCSVColumns(analysis.columnAnalysis);
 
@@ -2888,6 +2884,12 @@ class ChiefDashboard {
    * Update mapping display
    */
   updateMappingDisplay() {
+    // Clear all mapping displays first
+    const allStatusElements = document.querySelectorAll('[id^="mapping-"]');
+    allStatusElements.forEach(element => {
+      element.innerHTML = '<i class="fas fa-circle-notch"></i>';
+    });
+
     // Update visual indicators for mapped fields
     Object.entries(this.columnMappings).forEach(([csvColumn, dashboardField]) => {
       const statusElement = document.getElementById(`mapping-${dashboardField.replace(/\s+/g, '-')}`);
@@ -2895,9 +2897,23 @@ class ChiefDashboard {
         statusElement.innerHTML = `
           <i class="fas fa-check-circle" style="color: var(--chief-success, #10b981);"></i>
           <small>${csvColumn}</small>
+          <button class="remove-mapping-btn" onclick="dashboard.removeColumnMapping('${csvColumn}', '${dashboardField}')" title="Remove mapping">
+            <i class="fas fa-times"></i>
+          </button>
         `;
       }
     });
+  }
+
+  /**
+   * Remove a column mapping
+   */
+  removeColumnMapping(csvColumn, dashboardField) {
+    delete this.columnMappings[csvColumn];
+    this.updateMappingDisplay();
+    this.updateMappingPreview(this.pendingUpload?.analysis?.sampleRows || []);
+    console.log(`🗑️ Removed mapping: ${csvColumn} → ${dashboardField}`);
+    this.showNotification(`Removed mapping: ${csvColumn} → ${dashboardField}`, 'info');
   }
 
   /**
@@ -2982,51 +2998,97 @@ class ChiefDashboard {
 
     try {
       this.hideColumnMappingModal();
-      this.showLoading('Processing CSV with column mappings...');
 
-      const { file, analysis } = this.pendingUpload;
+      const { file } = this.pendingUpload;
       const csvText = await this.readCSVFile(file);
 
-      // Process with custom mappings
-      const processedData = this.processCSVDataWithMapping(csvText, this.columnMappings, file.name);
+      // Check if this is a recap upload
+      if (this.isRecapUpload) {
+        this.showLoading('Processing recap CSV with column mappings...');
 
-      // Get dataset name
-      const datasetNameInput = document.getElementById('dataset-name');
-      let datasetName = datasetNameInput ? datasetNameInput.value.trim() : '';
-      if (!datasetName) {
-        datasetName = file.name.replace('.csv', '');
+        // Process as recap data with custom mappings
+        const processedData = this.processCSVDataWithMapping(csvText, this.columnMappings, file.name);
+        processedData.type = 'recap'; // Mark as recap data
+
+        // Get dataset name
+        let datasetName = this.recapDatasetName || file.name.replace('.csv', '') + ' (Recap)';
+
+        // Store the recap dataset separately
+        if (!this.uploadedRecapDatasets) {
+          this.uploadedRecapDatasets = {};
+        }
+        this.uploadedRecapDatasets[datasetName] = processedData;
+        this.currentRecapData = processedData;
+        this.currentRecapDataset = datasetName;
+
+        // Update recap dataset switcher
+        this.updateRecapDatasetSwitcher(datasetName);
+
+        // Update recap data range info and set default date
+        this.updateRecapDataRange();
+        this.setDefaultRecapDateWithData();
+
+        this.showNotification(`Recap dataset "${datasetName}" uploaded successfully with custom mappings!
+          📊 Processed ${processedData.records.length} recap records`, 'success');
+
+        // Clear recap inputs
+        const fileInput = document.getElementById('recap-csv-file');
+        const datasetNameInput = document.getElementById('recap-dataset-name');
+        if (fileInput) fileInput.value = '';
+        if (datasetNameInput) datasetNameInput.value = '';
+
+      } else {
+        this.showLoading('Processing CSV with column mappings...');
+
+        // Process as regular data with custom mappings
+        const processedData = this.processCSVDataWithMapping(csvText, this.columnMappings, file.name);
+
+        // Get dataset name
+        const datasetNameInput = document.getElementById('dataset-name');
+        let datasetName = datasetNameInput ? datasetNameInput.value.trim() : '';
+        if (!datasetName) {
+          datasetName = file.name.replace('.csv', '');
+        }
+
+        // Store the dataset
+        this.uploadedDatasets[datasetName] = processedData;
+        this.currentData = processedData;
+        this.currentDataset = datasetName;
+
+        // Update dashboard
+        this.updateDatasetSwitcher(datasetName);
+        this.updateKPIs();
+        this.updateCharts();
+        this.updateDataTable();
+        this.updateLastUpdated();
+        this.updateDataExplorer();
+        this.populateFilterDropdowns();
+
+        this.showNotification(`Dataset "${datasetName}" uploaded successfully with custom mappings!
+          📊 Processed ${processedData.records.length} records`, 'success');
+
+        // Clear selections
+        this.selectedFiles = [];
+        this.updateFileList();
+        this.updateUploadButton();
+
+        if (datasetNameInput) datasetNameInput.value = '';
       }
-
-      // Store the dataset
-      this.uploadedDatasets[datasetName] = processedData;
-      this.currentData = processedData;
-      this.currentDataset = datasetName;
-
-      // Update dashboard
-      this.updateDatasetSwitcher(datasetName);
-      this.updateKPIs();
-      this.updateCharts();
-      this.updateDataTable();
-      this.updateLastUpdated();
-      this.updateDataExplorer();
-      this.populateFilterDropdowns();
 
       this.hideLoading();
 
-      // Clear selections
-      this.selectedFiles = [];
-      this.updateFileList();
-      this.updateUploadButton();
-
-      if (datasetNameInput) datasetNameInput.value = '';
-
-      this.showNotification(`Dataset "${datasetName}" uploaded successfully with custom mappings!
-        📊 Processed ${processedData.records.length} records`, 'success');
+      // Reset flags
+      this.isRecapUpload = false;
+      this.recapDatasetName = null;
 
     } catch (error) {
       this.hideLoading();
       console.error('❌ Error processing CSV with mappings:', error);
       this.showNotification('Error processing CSV: ' + error.message, 'error');
+
+      // Reset flags on error
+      this.isRecapUpload = false;
+      this.recapDatasetName = null;
     }
   }
 

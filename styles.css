@@ -3067,6 +3067,26 @@ body {
   font-style: italic;
 }
 
+/* Remove mapping button */
+.remove-mapping-btn {
+  background: none;
+  border: none;
+  color: var(--danger-color, #ef4444);
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+  opacity: 0.7;
+}
+
+.remove-mapping-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  opacity: 1;
+  transform: scale(1.1);
+}
+
 /* Responsive adjustments for column mapping */
 @media (max-width: 768px) {
   .mapping-container {
