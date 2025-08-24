@@ -1,16 +1,28 @@
-🛢️ Chief Petroleum Dashboard – CSV Analytics Platform
+🛢️ Chief Petroleum Dashboard – Advanced Data Analytics Platform
 
-Modern fuel business analytics dashboard with CSV data processing, interactive charts, and responsive design.
+Modern fuel business analytics dashboard with intelligent data processing, advanced column mapping, comprehensive validation, and interactive visualizations.
 
 A comprehensive business intelligence platform for Chief Petroleum’s operations, featuring:
 
-✅ CSV file upload and processing
+✅ **Smart Data Import**: CSV & Excel (.xlsx, .xls) support with drag-and-drop interface
 
-✅ Real-time KPI calculations
+✅ **Intelligent Column Mapping**: AI-powered field detection with visual mapping interface
 
-✅ Interactive data visualizations
+✅ **Advanced Data Validation**: Comprehensive quality analysis with error detection and suggestions
 
-✅ Self-contained, dependency-free operation
+✅ **Real-time KPI Calculations**: Dynamic metrics with advanced filtering capabilities
+
+✅ **Interactive Visualizations**: Enhanced charts with maximum visibility in all themes
+
+✅ **Multi-Dataset Management**: Upload, switch, and compare multiple data sources
+
+✅ **Advanced Filtering System**: Multi-dimensional filtering (drivers, customers, products, locations, dates)
+
+✅ **Location Mapping**: Geographic analysis and route visualization
+
+✅ **Data Quality Dashboard**: Completeness, consistency, and accuracy scoring
+
+✅ **Self-contained Operation**: No external dependencies, works offline
 
 🚀 Dashboard Preview
 
@@ -36,41 +48,103 @@ open index.html
 python -m http.server 8000
 
 📊 Features
-🎯 Key Performance Indicators
 
-Real-time Sales Tracking: Live revenue + transaction monitoring
+## 🚀 Enhanced Data Import System
 
-Volume Analytics: Gallon-based metrics across product types
+**Smart File Upload**
 
-Profit Margins: Dynamic margin analysis + tracking
+- Drag-and-drop interface for CSV and Excel files
+- Multiple file selection and management
+- Real-time file validation and preview
+- Support for .csv, .xlsx, and .xls formats
 
-Customer Intelligence: Rankings, retention metrics
+**Intelligent Column Mapping**
 
-Operational Data: Driver performance + delivery insights
+- AI-powered automatic field detection
+- Visual drag-and-drop mapping interface
+- Smart suggestions with confidence scoring
+- Real-time data preview during mapping
+- Save and reuse mapping templates
 
-📈 Interactive Visualizations
+**Advanced Data Validation**
 
-Sales trend charts (historical + real-time)
+- Comprehensive data quality analysis
+- Error detection and correction suggestions
+- Business rule validation for fuel industry
+- Statistical outlier detection
+- Data completeness and consistency scoring
 
-Customer rankings (top performers + growth trends)
+## 🎯 Key Performance Indicators
 
-Product distribution + inventory insights
+**Real-time Sales Tracking**: Live revenue + transaction monitoring with advanced filtering
 
-Geographic analytics (location-based performance)
+**Volume Analytics**: Gallon-based metrics across product types and locations
 
-Time-series analysis (custom date ranges)
+**Profit Margins**: Dynamic margin analysis + tracking by region with validation
 
-🎨 User Experience
+**Customer Intelligence**: Rankings, retention metrics with geographic insights
 
-Responsive design (desktop, tablet, mobile)
+**Operational Data**: Driver performance + delivery insights with location mapping
 
-Dark/Light themes (Chief Petroleum branded)
+**Data Quality Metrics**: Completeness, consistency, and accuracy dashboards
 
-Real-time updates (fresh data on every interaction)
+📈 Interactive Visualizations with Enhanced Visibility
 
-Export data as CSV
+Sales trend charts (historical + real-time) with pure white/black text
 
-Interactive controls: click, hover, filter
+Customer rankings (top performers + growth trends) with bold 14px fonts
+
+Product distribution + inventory insights with maximum contrast
+
+Geographic analytics (location-based performance mapping)
+
+Time-series analysis (custom date ranges with advanced filtering)
+
+Location bubble maps (sales, customers, deliveries, profit by location)
+
+🔍 Advanced Filtering System
+
+Multi-Select Filters: Drivers, customers, products, locations
+
+Date Range Selection: Flexible start and end date filtering
+
+Real-Time Updates: Instant filter application with live record counts
+
+Filter Summary: Clear indication of active filters and matching records
+
+Cross-Chart Integration: All visualizations work with applied filters
+
+📍 Location Mapping & Geographic Analysis
+
+Interactive Location Maps: Visual representation of geographic data
+
+Sales by Location: Bubble map showing sales performance by location
+
+Customer Distribution: Geographic spread of customer base
+
+Delivery Routes: Visualization of delivery patterns and coverage
+
+Profit by Region: Regional profitability analysis
+
+Location Statistics: Comprehensive geographic metrics and top performers
+
+🎨 Enhanced User Experience with Maximum Visibility
+
+Responsive design (desktop, tablet, mobile) with optimized chart text
+
+Dark/Light themes with pure white/black chart text for maximum contrast
+
+Enhanced Chart Visibility: 14px bold axis labels, 16px bold titles
+
+Real-time updates (fresh data on every interaction) with filter integration
+
+Advanced filtering interface with multi-select dropdowns and date pickers
+
+Export data as CSV with filtering support
+
+Interactive controls: click, hover, filter, map exploration
+
+Location mapping with interactive bubble visualizations
 
 🏗️ Architecture
 
@@ -82,25 +156,41 @@ Interactive controls: click, hover, filter
 
 📁 Project Structure
 chief-petroleum-dashboard/
-├── index.html # Main dashboard interface
-├── dashboard.js # Core application logic + CSV processing
-├── chart-manager.js # Chart.js visualizations
-├── theme-manager.js # Theme management system
-├── styles.css # Theming + responsive styles
-├── memory-bank/ # Project documentation
+├── index.html # Main dashboard interface with enhanced upload UI
+├── dashboard.js # Core application logic + advanced data processing
+│ ├── Enhanced CSV/Excel processing
+│ ├── Intelligent column mapping system
+│ ├── Advanced data validation engine
+│ ├── Drag-and-drop file handling
+│ └── Multi-dataset management
+├── chart-manager.js # Chart.js visualizations with theme optimization
+├── theme-manager.js # Advanced theme management system
+├── styles.css # Enhanced theming + responsive design + modal styles
+├── memory-bank/ # Comprehensive project documentation
 │ ├── README.md # Project overview
 │ ├── architecture.md # Technical architecture
 │ ├── implementation-plan.md # Development roadmap
-│ └── progress.md # Development progress
-└── vercel.json # Vercel config
+│ ├── progress.md # Development progress
+│ └── FEATURES.md # Advanced features documentation
+└── vercel.json # Vercel deployment configuration
 
-📊 Data Processing
+📊 Enhanced Data Processing
 
-✅ CSV File Upload: Drag-and-drop or file selection
+✅ **Smart File Upload**: Drag-and-drop interface for CSV and Excel files
 
-✅ Data Validation: Automatic field detection and validation
+✅ **Intelligent Column Mapping**: AI-powered field detection with visual mapping
 
-✅ Multi-Dataset Support: Upload and switch between multiple datasets
+✅ **Advanced Data Validation**: Comprehensive quality analysis with error reporting
+
+✅ **Multi-Format Support**: CSV, Excel (.xlsx, .xls) with automatic conversion
+
+✅ **Multi-Dataset Management**: Upload, switch, and compare multiple datasets
+
+✅ **Data Quality Dashboard**: Real-time completeness, consistency, and accuracy metrics
+
+✅ **Business Rule Validation**: Fuel industry-specific validation rules
+
+✅ **Statistical Analysis**: Outlier detection and pattern recognition
 
 ✅ Real-Time Processing: Instant KPI calculations and chart updates
 
@@ -268,12 +358,55 @@ For Chief Petroleum: fuel ops, BI, analytics
 - [x] Clean up configuration files
 - [x] Test CSV-only functionality
 
+### ✅ Enhanced Chart Visibility & Advanced Filtering (January 2025)
+
+- [x] Implement pure white/black chart text for maximum visibility
+- [x] Add bold font weights (14px axis labels, 16px titles)
+- [x] Create comprehensive Chart.js color forcing system
+- [x] Build advanced multi-dimensional filtering system
+- [x] Add location mapping and geographic analysis
+- [x] Implement real-time filter application with live counts
+- [x] Create interactive bubble map visualizations
+- [x] Add enhanced daily recap with granular filtering
+- [x] Integrate filtering across all chart types
+- [x] Add CSS backup system for chart text visibility
+
 ### ✅ Documentation Update (Following Rules File)
 
 - [x] Create memory-bank directory structure
 - [x] Write architecture.md with complete technical details
 - [x] Write implementation-plan.md with development roadmap
 - [x] Write progress.md with detailed development history
-- [x] Update README.md with current status and checkmarks
+- [x] Update README.md with current status and new features
 
-📊 Last Updated: December 2024 – CSV-Only Conversion Complete
+## 🆕 Recent Enhancements (January 2025)
+
+### 🎨 Maximum Chart Visibility
+
+- **Pure White/Black Text**: Chart axis text now uses #ffffff (dark theme) and #000000 (light theme)
+- **Bold Font System**: 14px bold axis labels, 16px bold titles, 12px bold legends
+- **Multi-Layer Color Forcing**: Chart.js defaults + individual configs + CSS overrides + JavaScript forcing
+- **Theme-Responsive**: Automatic color updates when switching between dark/light themes
+
+### 🔍 Advanced Filtering System
+
+- **Multi-Select Dropdowns**: Filter by drivers, customers, products, locations
+- **Date Range Selection**: Flexible start and end date filtering
+- **Real-Time Application**: Instant filter results with live record counts
+- **Cross-Chart Integration**: All visualizations work with applied filters
+- **Filter Summary**: Clear indication of active filters and matching records
+
+### 📍 Location Mapping & Geographic Analysis
+
+- **Interactive Maps**: Sales, customers, deliveries, profit by location
+- **Bubble Visualizations**: Size-based representation of location performance
+- **Geographic Statistics**: Comprehensive location metrics and top performers
+- **Filtered Integration**: Maps work seamlessly with applied filters
+
+### 📅 Enhanced Daily Recap
+
+- **Granular Filtering**: Driver, customer, product, location-specific daily analysis
+- **Advanced Controls**: Individual filter dropdowns for precise daily breakdowns
+- **Integrated Experience**: Consistent filtering across main dashboard and recap
+
+📊 Last Updated: January 2025 – Advanced Filtering & Enhanced Visibility Complete

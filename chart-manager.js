@@ -7,12 +7,13 @@ class ChiefChartManager {
   constructor() {
     this.charts = {};
     this.isDarkTheme = false;
-    
+
     // Chief Petroleum brand colors - Optimized for visibility
     this.colors = {
       primary: '#0077cc', // Chief blue - visible on both themes
       secondary: '#ff6b35', // Orange accent
       accent: '#ffd700', // Gold
+      gold: '#ffd700', // Gold (alias for accent)
       success: '#10b981', // Green
       warning: '#f59e0b', // Amber
       danger: '#ef4444', // Red
@@ -22,7 +23,7 @@ class ChiefChartManager {
       indigo: '#6366f1', // Indigo
       gray: '#64748b' // Neutral gray
     };
-    
+
     // Chart.js default configuration - Improved readability
     Chart.defaults.font.family = "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
     Chart.defaults.font.size = 13; // Slightly smaller for better fit
@@ -31,6 +32,7 @@ class ChiefChartManager {
     Chart.defaults.plugins.legend.labels.usePointStyle = true;
     Chart.defaults.plugins.legend.labels.padding = 15; // Reduced padding
     Chart.defaults.plugins.legend.labels.boxWidth = 12; // Smaller legend boxes
+    Chart.defaults.plugins.legend.labels.font = { size: 12, weight: 'bold' };
     Chart.defaults.responsive = true;
     Chart.defaults.maintainAspectRatio = false;
     Chart.defaults.elements.point.radius = 4; // Smaller points
@@ -42,25 +44,149 @@ class ChiefChartManager {
    */
   updateTheme(isDark) {
     this.isDarkTheme = isDark;
-    
-    // Update Chart.js defaults for theme - Better contrast
-    Chart.defaults.color = isDark ? '#f1f5f9' : '#334155'; // Higher contrast text
-    Chart.defaults.borderColor = isDark ? '#64748b' : '#cbd5e1'; // Visible borders
-    Chart.defaults.backgroundColor = isDark ? '#1e293b' : '#ffffff';
 
-    // Update grid lines for better visibility
-    Chart.defaults.scales.linear.grid.color = isDark ? '#475569' : '#e2e8f0';
-    Chart.defaults.scales.category.grid.color = isDark ? '#475569' : '#e2e8f0';
-    
-    // Recreate all existing charts with new theme
-    Object.keys(this.charts).forEach(chartId => {
-      const chart = this.charts[chartId];
-      if (chart && chart.data) {
-        const data = chart.data;
-        const options = chart.options;
-        this.updateChart(chartId, data, options);
+    // Prevent recursion by checking if we're already updating
+    if (this.isUpdatingTheme) {
+      console.log('🎨 Theme update already in progress, skipping...');
+      return;
+    }
+
+    this.isUpdatingTheme = true;
+
+    try {
+      console.log(`🎨 Starting chart theme update to: ${isDark ? 'dark' : 'light'}`);
+
+      // Update Chart.js defaults for theme - Force white text in dark theme
+      const textColor = isDark ? '#ffffff' : '#000000';
+      const borderColor = isDark ? '#64748b' : '#cbd5e1';
+      const backgroundColor = isDark ? '#1e293b' : '#ffffff';
+
+      // Safely update Chart.js defaults
+      Chart.defaults.color = textColor;
+      Chart.defaults.borderColor = borderColor;
+      Chart.defaults.backgroundColor = backgroundColor;
+
+      // Update font defaults safely
+      if (!Chart.defaults.font) Chart.defaults.font = {};
+      Chart.defaults.font.size = 14;
+      Chart.defaults.font.weight = 'bold';
+      Chart.defaults.font.color = textColor;
+
+      // Safely update scale defaults
+      Chart.defaults.scales = Chart.defaults.scales || {};
+      Chart.defaults.scales.linear = Chart.defaults.scales.linear || {};
+      Chart.defaults.scales.category = Chart.defaults.scales.category || {};
+
+      Chart.defaults.scales.linear.ticks = Chart.defaults.scales.linear.ticks || {};
+      Chart.defaults.scales.category.ticks = Chart.defaults.scales.category.ticks || {};
+
+      Chart.defaults.scales.linear.ticks.color = textColor;
+      Chart.defaults.scales.category.ticks.color = textColor;
+      Chart.defaults.scales.linear.ticks.font = { size: 14, weight: 'bold' };
+      Chart.defaults.scales.category.ticks.font = { size: 14, weight: 'bold' };
+
+      // Update grid lines for maximum visibility
+      Chart.defaults.scales.linear.grid = Chart.defaults.scales.linear.grid || {};
+      Chart.defaults.scales.category.grid = Chart.defaults.scales.category.grid || {};
+      Chart.defaults.scales.linear.grid.color = isDark ? 'rgba(255, 255, 255, 0.4)' : '#e2e8f0';
+      Chart.defaults.scales.category.grid.color = isDark ? 'rgba(255, 255, 255, 0.4)' : '#e2e8f0';
+
+      // Safely update plugin defaults
+      if (!Chart.defaults.plugins) Chart.defaults.plugins = {};
+      if (!Chart.defaults.plugins.legend) Chart.defaults.plugins.legend = {};
+      if (!Chart.defaults.plugins.legend.labels) Chart.defaults.plugins.legend.labels = {};
+      if (!Chart.defaults.plugins.title) Chart.defaults.plugins.title = {};
+
+      Chart.defaults.plugins.legend.labels.color = textColor;
+      Chart.defaults.plugins.title.color = textColor;
+
+      console.log(`🎨 Chart.js defaults updated successfully`);
+
+      // Update existing charts with a delay to prevent recursion
+      setTimeout(() => {
+        this.updateExistingCharts();
+      }, 100);
+
+    } catch (error) {
+      console.error('❌ Error updating chart theme:', error);
+    } finally {
+      // Reset the flag after a delay
+      setTimeout(() => {
+        this.isUpdatingTheme = false;
+      }, 500);
+    }
+  }
+
+  /**
+   * Update existing charts with new theme
+   */
+  updateExistingCharts() {
+    try {
+      Object.keys(this.charts).forEach(chartId => {
+        const chart = this.charts[chartId];
+        if (chart && chart.data && !chart.isDestroyed) {
+          // Safely update chart options
+          this.updateChartThemeOptions(chart);
+
+          // Update chart with animation disabled to prevent issues
+          chart.update('none');
+        }
+      });
+      console.log(`🎨 Updated ${Object.keys(this.charts).length} existing charts`);
+    } catch (error) {
+      console.error('❌ Error updating existing charts:', error);
+    }
+  }
+
+  /**
+   * Update chart theme options safely
+   */
+  updateChartThemeOptions(chart) {
+    if (!chart || !chart.options) return;
+
+    const textColor = this.isDarkTheme ? '#ffffff' : '#000000';
+    const gridColor = this.isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.1)';
+
+    try {
+      // Update scales safely
+      if (chart.options.scales) {
+        Object.keys(chart.options.scales).forEach(scaleKey => {
+          const scale = chart.options.scales[scaleKey];
+          if (scale) {
+            if (scale.ticks) {
+              scale.ticks.color = textColor;
+            }
+            if (scale.title) {
+              scale.title.color = textColor;
+            }
+            if (scale.grid) {
+              scale.grid.color = gridColor;
+            }
+          }
+        });
       }
-    });
+
+      // Update plugins safely
+      if (chart.options.plugins) {
+        if (chart.options.plugins.legend && chart.options.plugins.legend.labels) {
+          chart.options.plugins.legend.labels.color = textColor;
+        }
+        if (chart.options.plugins.title) {
+          chart.options.plugins.title.color = textColor;
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ Error updating chart options:', error);
+    }
+  }
+
+  /**
+   * Force update axis colors for existing chart (deprecated - use updateChartThemeOptions)
+   */
+  forceUpdateAxisColors(chart) {
+    // This method is deprecated and replaced by updateChartThemeOptions
+    // Keeping for backward compatibility but doing nothing to prevent recursion
+    console.log('⚠️ forceUpdateAxisColors is deprecated, using updateChartThemeOptions instead');
   }
 
   /**
@@ -68,10 +194,14 @@ class ChiefChartManager {
    */
   getThemeColors() {
     return {
-      text: this.isDarkTheme ? '#ffffff' : '#4a5568',
+      text: this.isDarkTheme ? '#ffffff' : '#000000', // Pure white for dark theme, pure black for light theme
       background: this.isDarkTheme ? '#2d3748' : '#ffffff',
-      border: this.isDarkTheme ? '#4a5568' : '#e2e8f0',
-      grid: this.isDarkTheme ? 'rgba(255, 255, 255, 0.2)' : '#f1f5f9'
+      border: this.isDarkTheme ? '#64748b' : '#e2e8f0', // More visible borders
+      grid: this.isDarkTheme ? 'rgba(255, 255, 255, 0.4)' : '#f1f5f9', // Even brighter grid lines
+      // Force text colors for all chart elements
+      axisText: this.isDarkTheme ? '#ffffff' : '#000000',
+      titleText: this.isDarkTheme ? '#ffffff' : '#000000',
+      legendText: this.isDarkTheme ? '#ffffff' : '#000000'
     };
   }
 
@@ -89,7 +219,7 @@ class ChiefChartManager {
       this.colors.teal,      // Teal
       this.colors.pink,      // Pink
       this.colors.indigo,    // Indigo
-      this.colors.accent     // Gold
+      this.colors.gold       // Gold (alias for accent)
     ];
 
     // If we need more colors, generate variations
@@ -125,7 +255,7 @@ class ChiefChartManager {
   async createSalesTrendChart(data, period = 'monthly') {
     const chartData = await this.prepareSalesTrendData(data, period);
     const themeColors = this.getThemeColors();
-    
+
     const config = {
       type: 'line',
       data: {
@@ -183,7 +313,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -194,15 +324,29 @@ class ChiefChartManager {
         scales: {
           x: {
             grid: { color: themeColors.grid },
-            ticks: { color: themeColors.text }
+            ticks: {
+              color: themeColors.axisText,
+              font: { size: 14, weight: 'bold' }
+            },
+            title: {
+              display: false,
+              color: themeColors.titleText,
+              font: { size: 16, weight: 'bold' }
+            }
           },
           y: {
             grid: { color: themeColors.grid },
-            ticks: { 
-              color: themeColors.text,
-              callback: function(value) {
+            ticks: {
+              color: themeColors.axisText,
+              font: { size: 14, weight: 'bold' },
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
+            },
+            title: {
+              display: false,
+              color: themeColors.titleText,
+              font: { size: 16, weight: 'bold' }
             }
           }
         },
@@ -213,7 +357,7 @@ class ChiefChartManager {
         }
       }
     };
-    
+
     return this.createChart('sales-chart', config);
   }
 
@@ -223,7 +367,7 @@ class ChiefChartManager {
   createProductChart(data) {
     const productData = this.prepareProductData(data);
     const themeColors = this.getThemeColors();
-    
+
     const config = {
       type: 'doughnut',
       data: {
@@ -263,7 +407,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.label || '';
                 const value = context.parsed;
                 const total = context.dataset.data.reduce((a, b) => a + b, 0);
@@ -275,7 +419,7 @@ class ChiefChartManager {
         }
       }
     };
-    
+
     return this.createChart('product-chart', config);
   }
 
@@ -285,7 +429,7 @@ class ChiefChartManager {
   createCustomerChart(data) {
     const customerData = this.prepareCustomerData(data);
     const themeColors = this.getThemeColors();
-    
+
     const config = {
       type: 'bar',
       data: {
@@ -331,7 +475,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -342,16 +486,16 @@ class ChiefChartManager {
         scales: {
           x: {
             grid: { color: themeColors.grid },
-            ticks: { 
+            ticks: {
               color: themeColors.text,
               maxRotation: 45
             }
           },
           y: {
             grid: { color: themeColors.grid },
-            ticks: { 
+            ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             }
@@ -359,7 +503,7 @@ class ChiefChartManager {
         }
       }
     };
-    
+
     return this.createChart('customer-chart', config);
   }
 
@@ -369,7 +513,7 @@ class ChiefChartManager {
   createProfitChart(data) {
     const profitData = this.prepareProfitData(data);
     const themeColors = this.getThemeColors();
-    
+
     const config = {
       type: 'scatter',
       data: {
@@ -403,10 +547,10 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              title: function() {
+              title: function () {
                 return 'Transaction Details';
               },
-              label: function(context) {
+              label: function (context) {
                 const point = context.parsed;
                 const margin = point.x > 0 ? ((point.y / point.x) * 100).toFixed(1) : 0;
                 return [
@@ -427,9 +571,9 @@ class ChiefChartManager {
               color: themeColors.text
             },
             grid: { color: themeColors.grid },
-            ticks: { 
+            ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             }
@@ -441,9 +585,9 @@ class ChiefChartManager {
               color: themeColors.text
             },
             grid: { color: themeColors.grid },
-            ticks: { 
+            ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             }
@@ -451,7 +595,7 @@ class ChiefChartManager {
         }
       }
     };
-    
+
     return this.createChart('profit-chart', config);
   }
 
@@ -464,15 +608,15 @@ class ChiefChartManager {
       console.error(`Canvas element ${canvasId} not found`);
       return null;
     }
-    
+
     // Destroy existing chart if it exists
     if (this.charts[canvasId]) {
       this.charts[canvasId].destroy();
     }
-    
+
     const ctx = canvas.getContext('2d');
     this.charts[canvasId] = new Chart(ctx, config);
-    
+
     return this.charts[canvasId];
   }
 
@@ -482,7 +626,7 @@ class ChiefChartManager {
   updateChart(canvasId, newData, newOptions = null) {
     const chart = this.charts[canvasId];
     if (!chart) return;
-    
+
     chart.data = newData;
     if (newOptions) {
       chart.options = newOptions;
@@ -778,7 +922,7 @@ class ChiefChartManager {
 
     // Generate labels for all months
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const labels = [];
     const sales2024 = [];
@@ -818,7 +962,7 @@ class ChiefChartManager {
     });
 
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const labels = [];
     const salesGrowth = [];
@@ -895,7 +1039,7 @@ class ChiefChartManager {
     const datasets = [];
 
     // Collect all unique months across all datasets
-    historicalDataSets.forEach(({sheet, data}) => {
+    historicalDataSets.forEach(({ sheet, data }) => {
       const trend = data.getSalesTrendData ? data.getSalesTrendData(data, 'monthly') : [];
       trend.forEach(item => allMonths.add(item.period));
     });
@@ -905,7 +1049,7 @@ class ChiefChartManager {
     const labels = sortedMonths.map(period => this.formatPeriodLabel(period, 'monthly'));
 
     // Create dataset for each sheet
-    historicalDataSets.forEach(({sheet, data}) => {
+    historicalDataSets.forEach(({ sheet, data }) => {
       const trend = data.getSalesTrendData ? data.getSalesTrendData(data, 'monthly') : [];
       const monthMap = {};
 
@@ -930,7 +1074,7 @@ class ChiefChartManager {
    */
   prepareSeasonalData(data) {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const monthlyData = {};
 
@@ -998,7 +1142,7 @@ class ChiefChartManager {
    */
   prepareCustomerRetentionData(data) {
     const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-                       'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 
     const monthlyCustomers = {};
     const customerVisits = {};
@@ -1084,9 +1228,39 @@ class ChiefChartManager {
   }
 
   /**
+   * Clear all charts
+   */
+  clearAllCharts() {
+    Object.keys(this.charts).forEach(chartId => {
+      if (this.charts[chartId]) {
+        this.charts[chartId].destroy();
+        delete this.charts[chartId];
+      }
+    });
+    console.log('🧹 All charts cleared');
+  }
+
+  /**
    * Convert hex color to rgba
    */
   hexToRgba(hex, alpha) {
+    // Handle undefined or null hex values
+    if (!hex || typeof hex !== 'string') {
+      console.warn('⚠️ Invalid hex color provided to hexToRgba:', hex);
+      hex = this.colors.primary; // Fallback to primary color
+    }
+
+    // Ensure hex starts with #
+    if (!hex.startsWith('#')) {
+      hex = '#' + hex;
+    }
+
+    // Ensure hex is 6 characters long
+    if (hex.length !== 7) {
+      console.warn('⚠️ Invalid hex color length:', hex);
+      hex = this.colors.primary; // Fallback to primary color
+    }
+
     const r = parseInt(hex.slice(1, 3), 16);
     const g = parseInt(hex.slice(3, 5), 16);
     const b = parseInt(hex.slice(5, 7), 16);
@@ -1159,12 +1333,12 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
               },
-              afterBody: function(tooltipItems) {
+              afterBody: function (tooltipItems) {
                 if (tooltipItems.length === 2) {
                   const value2024 = tooltipItems[0].parsed.y;
                   const value2025 = tooltipItems[1].parsed.y;
@@ -1185,7 +1359,7 @@ class ChiefChartManager {
             grid: { color: themeColors.grid },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             }
@@ -1261,7 +1435,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: ${value.toFixed(1)}%`;
@@ -1278,7 +1452,7 @@ class ChiefChartManager {
             grid: { color: themeColors.grid },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return value.toFixed(1) + '%';
               }
             }
@@ -1355,7 +1529,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -1375,7 +1549,7 @@ class ChiefChartManager {
             grid: { color: themeColors.grid },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             },
@@ -1392,7 +1566,7 @@ class ChiefChartManager {
             grid: { drawOnChartArea: false },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             },
@@ -1456,7 +1630,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: $${value.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
@@ -1473,7 +1647,7 @@ class ChiefChartManager {
             grid: { color: themeColors.grid },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             }
@@ -1541,7 +1715,7 @@ class ChiefChartManager {
             pointLabels: { color: themeColors.text },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             }
@@ -1615,7 +1789,7 @@ class ChiefChartManager {
             borderColor: themeColors.border,
             borderWidth: 1,
             callbacks: {
-              label: function(context) {
+              label: function (context) {
                 const label = context.dataset.label || '';
                 const value = context.parsed.y;
                 return `${label}: ${value} customers`;
@@ -1634,7 +1808,7 @@ class ChiefChartManager {
             grid: { color: themeColors.grid },
             ticks: {
               color: themeColors.text,
-              callback: function(value) {
+              callback: function (value) {
                 return value + ' customers';
               }
             }

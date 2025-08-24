@@ -9,7 +9,7 @@ class ChiefThemeManager {
     this.themeToggleBtn = null;
     this.themeIcon = null;
     this.body = null;
-    
+
     this.init();
   }
 
@@ -21,16 +21,16 @@ class ChiefThemeManager {
     this.themeToggleBtn = document.getElementById('theme-toggle');
     this.themeIcon = document.getElementById('theme-icon');
     this.body = document.getElementById('app-body');
-    
+
     // Load saved theme or detect system preference
     this.loadSavedTheme();
-    
+
     // Set up event listeners
     this.setupEventListeners();
-    
+
     // Apply initial theme
     this.applyTheme(this.currentTheme);
-    
+
     console.log('🎨 Theme Manager initialized');
   }
 
@@ -39,7 +39,7 @@ class ChiefThemeManager {
    */
   loadSavedTheme() {
     const savedTheme = localStorage.getItem('chief-dashboard-theme');
-    
+
     if (savedTheme) {
       this.currentTheme = savedTheme;
     } else {
@@ -86,7 +86,7 @@ class ChiefThemeManager {
     this.currentTheme = this.currentTheme === 'light' ? 'dark' : 'light';
     this.applyTheme(this.currentTheme);
     this.saveTheme();
-    
+
     // Notify other components
     this.notifyThemeChange();
   }
@@ -99,29 +99,29 @@ class ChiefThemeManager {
 
     // Remove existing theme classes
     this.body.classList.remove('light-theme', 'dark-theme', 'chief-dark-theme');
-    
+
     // Add new theme class
     if (theme === 'dark') {
       this.body.classList.add('chief-dark-theme');
     } else {
       this.body.classList.add('light-theme');
     }
-    
+
     // Force styles for dark theme
     if (theme === 'dark') {
       this.body.style.backgroundColor = '#000000';
       this.body.style.color = '#ffffff';
     }
-    
+
     // Update theme icon
     this.updateThemeIcon(theme);
-    
+
     // Update logo for theme
     this.updateLogoForTheme(theme);
-    
+
     // Update meta theme color for mobile browsers
     this.updateMetaThemeColor(theme);
-    
+
     console.log(`🎨 Theme applied: ${theme}`);
   }
 
@@ -130,10 +130,10 @@ class ChiefThemeManager {
    */
   updateThemeIcon(theme) {
     if (!this.themeIcon) return;
-    
+
     // Clear existing classes
     this.themeIcon.className = '';
-    
+
     // Add appropriate icon
     if (theme === 'dark') {
       this.themeIcon.className = 'fas fa-sun';
@@ -150,7 +150,7 @@ class ChiefThemeManager {
   updateLogoForTheme(theme) {
     const logo = document.getElementById('company-logo');
     if (!logo) return;
-    
+
     // You can adjust logo opacity or switch to a different logo for dark theme
     if (theme === 'dark') {
       logo.style.filter = 'brightness(1.2) contrast(0.9)';
@@ -164,13 +164,13 @@ class ChiefThemeManager {
    */
   updateMetaThemeColor(theme) {
     let metaThemeColor = document.querySelector('meta[name="theme-color"]');
-    
+
     if (!metaThemeColor) {
       metaThemeColor = document.createElement('meta');
       metaThemeColor.name = 'theme-color';
       document.head.appendChild(metaThemeColor);
     }
-    
+
     // Set theme color based on current theme
     if (theme === 'dark') {
       metaThemeColor.content = '#8B0000'; // Dark red for Chief Petroleum
@@ -190,15 +190,34 @@ class ChiefThemeManager {
    * Notify other components of theme change
    */
   notifyThemeChange() {
-    // Dispatch custom event
-    const themeChangeEvent = new CustomEvent('themeChange', {
-      detail: { theme: this.currentTheme, isDark: this.currentTheme === 'dark' }
-    });
-    document.dispatchEvent(themeChangeEvent);
-    
-    // Update charts if chart manager exists
-    if (window.chartManager) {
-      window.chartManager.updateTheme(this.currentTheme === 'dark');
+    // Prevent multiple simultaneous theme changes
+    if (this.isNotifyingThemeChange) {
+      console.log('🎨 Theme change notification already in progress, skipping...');
+      return;
+    }
+
+    this.isNotifyingThemeChange = true;
+
+    try {
+      // Dispatch custom event
+      const themeChangeEvent = new CustomEvent('themeChange', {
+        detail: { theme: this.currentTheme, isDark: this.currentTheme === 'dark' }
+      });
+      document.dispatchEvent(themeChangeEvent);
+
+      // Update charts if chart manager exists with a small delay
+      if (window.chartManager) {
+        setTimeout(() => {
+          window.chartManager.updateTheme(this.currentTheme === 'dark');
+        }, 50);
+      }
+    } catch (error) {
+      console.error('❌ Error notifying theme change:', error);
+    } finally {
+      // Reset flag after a delay
+      setTimeout(() => {
+        this.isNotifyingThemeChange = false;
+      }, 300);
     }
   }
 
@@ -224,7 +243,7 @@ class ChiefThemeManager {
       console.warn('Invalid theme. Use "light" or "dark"');
       return;
     }
-    
+
     this.currentTheme = theme;
     this.applyTheme(theme);
     this.saveTheme();
@@ -237,7 +256,7 @@ class ChiefThemeManager {
   getThemeVariables() {
     const root = document.documentElement;
     const computedStyle = getComputedStyle(root);
-    
+
     return {
       bgPrimary: computedStyle.getPropertyValue('--bg-primary').trim(),
       bgSecondary: computedStyle.getPropertyValue('--bg-secondary').trim(),
@@ -255,7 +274,7 @@ class ChiefThemeManager {
    */
   applyCustomColors(colors) {
     const root = document.documentElement;
-    
+
     Object.keys(colors).forEach(colorKey => {
       const cssProperty = `--${colorKey.replace(/([A-Z])/g, '-$1').toLowerCase()}`;
       root.style.setProperty(cssProperty, colors[colorKey]);
@@ -267,15 +286,15 @@ class ChiefThemeManager {
    */
   resetToDefaultColors() {
     const root = document.documentElement;
-    
+
     // Remove any custom color overrides
     const customProperties = [
       '--chief-primary',
-      '--chief-secondary', 
+      '--chief-secondary',
       '--chief-accent',
       '--chief-gold'
     ];
-    
+
     customProperties.forEach(property => {
       root.style.removeProperty(property);
     });
@@ -304,7 +323,7 @@ class ChiefThemeManager {
   syncWithSystemPreference() {
     const systemPreference = this.getSystemPreference();
     this.setTheme(systemPreference);
-    
+
     // Remove saved preference to allow auto-switching
     localStorage.removeItem('chief-dashboard-theme');
   }
@@ -314,7 +333,7 @@ class ChiefThemeManager {
    */
   enableTransitions(enable = true) {
     const root = document.documentElement;
-    
+
     if (enable) {
       root.style.setProperty('--transition-duration', '0.3s');
     } else {
@@ -327,7 +346,7 @@ class ChiefThemeManager {
    */
   animateThemeTransition() {
     this.enableTransitions(false);
-    
+
     // Brief delay to ensure no transitions during immediate changes
     setTimeout(() => {
       this.enableTransitions(true);

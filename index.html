@@ -12,6 +12,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body class="chief-dark-theme" id="app-body">
@@ -134,20 +135,42 @@
             <div class="header-controls">
                 <!-- Data Management Section -->
                 <div class="data-management-section">
-                    <!-- CSV Upload Section -->
+                    <!-- Enhanced CSV Upload Section with Drag & Drop -->
                     <div class="csv-upload-container">
                         <div class="csv-upload-section">
-                            <label for="csv-file" class="csv-upload-label">
-                                <i class="fas fa-upload"></i>
-                                📁 Upload CSV Data:
-                                <span class="filter-description">Upload your fuel data CSV files</span>
-                            </label>
-                            <input type="file" id="csv-file" accept=".csv" class="csv-input" title="Select CSV file to upload">
-                            <input type="text" id="dataset-name" class="dataset-name-input" placeholder="Dataset name (optional)" title="Enter a name for this dataset">
-                            <button id="upload-csv" class="upload-csv-btn" title="Upload and Process CSV File">
-                                <i class="fas fa-cloud-upload-alt"></i>
-                                Upload CSV
-                            </button>
+                            <!-- Drag and Drop Zone -->
+                            <div id="drag-drop-zone" class="drag-drop-zone">
+                                <div class="drag-drop-content">
+                                    <i class="fas fa-cloud-upload-alt drag-drop-icon"></i>
+                                    <h3>Drag & Drop CSV Files Here</h3>
+                                    <p>or click to browse files</p>
+                                    <div class="supported-formats">
+                                        <span>Supports: CSV, Excel (.xlsx, .xls) files</span>
+                                    </div>
+                                </div>
+                                <div class="drag-drop-overlay">
+                                    <i class="fas fa-download"></i>
+                                    <span>Drop files to upload</span>
+                                </div>
+                            </div>
+
+                            <!-- Traditional File Input (Hidden) -->
+                            <input type="file" id="csv-file" accept=".csv,.xlsx,.xls" class="csv-input-hidden" multiple title="Select CSV or Excel files to upload">
+
+                            <!-- Upload Controls -->
+                            <div class="upload-controls">
+                                <input type="text" id="dataset-name" class="dataset-name-input" placeholder="Dataset name (optional)" title="Enter a name for this dataset">
+                                <button id="upload-csv" class="upload-csv-btn" title="Upload and Process CSV File" disabled>
+                                    <i class="fas fa-cloud-upload-alt"></i>
+                                    Upload CSV
+                                </button>
+                            </div>
+
+                            <!-- File List -->
+                            <div id="file-list" class="file-list" style="display: none;">
+                                <h4>Selected Files:</h4>
+                                <div id="file-items" class="file-items"></div>
+                            </div>
                         </div>
 
                         <div class="dataset-switcher" id="dataset-switcher" style="display: none;">
@@ -498,6 +521,38 @@
                 <div class="data-range-info" id="recap-data-range-info" style="margin-bottom: 1rem;">
                     <span class="range-label">Recap Data Range:</span> <span id="recap-data-range">Loading...</span>
                 </div>
+
+                <!-- Recap CSV Upload -->
+                <div class="recap-csv-upload-container" style="margin-bottom: 1.5rem;">
+                    <div class="csv-upload-section">
+                        <div class="upload-header">
+                            <h3>
+                                📁 Upload Recap CSV Data:
+                                <span class="filter-description">Upload daily recap/summary CSV files for detailed analysis</span>
+                            </h3>
+                        </div>
+                        <div class="upload-controls">
+                            <input type="text" id="recap-dataset-name" class="dataset-name-input" placeholder="Recap dataset name (optional)" title="Enter a name for this recap dataset">
+                            <input type="file" id="recap-csv-file" class="csv-file-input" accept=".csv" title="Select CSV file to upload">
+                            <button id="upload-recap-csv" class="upload-btn" title="Upload and Process Recap CSV">
+                                <i class="fas fa-upload"></i>
+                                Upload Recap CSV
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Recap Dataset Switcher -->
+                    <div class="recap-dataset-switcher" id="recap-dataset-switcher" style="display: none;">
+                        <label for="recap-dataset-selector" class="dataset-label">
+                            <i class="fas fa-database"></i>
+                            Active Recap Dataset:
+                        </label>
+                        <select id="recap-dataset-selector" class="dataset-selector" title="Switch between uploaded recap datasets">
+                            <option value="">No recap data uploaded</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="daily-recap-controls">
                     <label for="recap-date" class="recap-date-label">
                         <i class="fas fa-calendar-day"></i>
@@ -509,6 +564,37 @@
                         <i class="fas fa-search"></i>
                         Load Daily Recap
                     </button>
+                </div>
+
+                <!-- Recap Filters -->
+                <div class="recap-filters-section" style="margin-top: 1.5rem;">
+                    <h4>🔍 Recap Filters</h4>
+                    <div class="recap-filters-grid">
+                        <div class="filter-group">
+                            <label for="recap-driver-filter">Driver:</label>
+                            <select id="recap-driver-filter" class="filter-select">
+                                <option value="">All Drivers</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="recap-customer-filter">Customer:</label>
+                            <select id="recap-customer-filter" class="filter-select">
+                                <option value="">All Customers</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="recap-product-filter">Product:</label>
+                            <select id="recap-product-filter" class="filter-select">
+                                <option value="">All Products</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label for="recap-location-filter">Location:</label>
+                            <select id="recap-location-filter" class="filter-select">
+                                <option value="">All Locations</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -876,6 +962,62 @@
                 </div>
             </div>
 
+            <!-- Advanced Filters -->
+            <div class="explorer-filters-section">
+                <h3>🔍 Advanced Data Filters</h3>
+                <p class="filter-instructions">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Multi-Select Instructions:</strong> Hold Ctrl (Windows) or Cmd (Mac) while clicking to select multiple items in each filter.
+                </p>
+                <div class="filters-grid">
+                    <div class="filter-group">
+                        <label for="driver-filter">Driver/Employee:</label>
+                        <select id="driver-filter" class="filter-select" multiple>
+                            <option value="">All Drivers</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="customer-filter">Customer:</label>
+                        <select id="customer-filter" class="filter-select" multiple>
+                            <option value="">All Customers</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="product-filter-explorer">Product Type:</label>
+                        <select id="product-filter-explorer" class="filter-select" multiple>
+                            <option value="">All Products</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="location-filter">Location:</label>
+                        <select id="location-filter" class="filter-select" multiple>
+                            <option value="">All Locations</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-range-start">Date From:</label>
+                        <input type="date" id="date-range-start" class="filter-input">
+                    </div>
+                    <div class="filter-group">
+                        <label for="date-range-end">Date To:</label>
+                        <input type="date" id="date-range-end" class="filter-input">
+                    </div>
+                </div>
+                <div class="filter-actions">
+                    <button id="apply-explorer-filters" class="apply-filters-btn">
+                        <i class="fas fa-filter"></i>
+                        Apply Filters
+                    </button>
+                    <button id="clear-explorer-filters" class="clear-filters-btn">
+                        <i class="fas fa-times"></i>
+                        Clear All
+                    </button>
+                    <div class="filter-summary" id="filter-summary">
+                        <span class="filter-count">No filters applied</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Headers Display -->
             <div class="headers-display" id="headers-display" style="display: none;">
                 <h3>Available Data Fields</h3>
@@ -902,6 +1044,12 @@
             <!-- Natural Language Query -->
             <div class="natural-query-section">
                 <h3>Ask Questions About Your Data</h3>
+                <div class="ai-data-selector-container">
+                    <label for="ai-data-select">Data Source:</label>
+                    <select id="ai-data-select" class="ai-data-select">
+                        <option value="">Select Dataset for AI Analysis...</option>
+                    </select>
+                </div>
                 <div class="query-input-container">
                     <textarea id="natural-query-input" class="query-input"
                               placeholder="Ask questions like: 'What were my top 5 customers last month?' or 'Show me profit trends by product type' or 'Which days had the highest sales?'"></textarea>
@@ -918,10 +1066,65 @@
                 </div>
             </div>
 
+            <!-- Location Mapping -->
+            <div class="location-mapping-section">
+                <h3>📍 Location Analysis & Mapping</h3>
+                <p class="filter-instructions">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Location Mapping:</strong> Uses data from the Data Explorer filters above. Apply filters first, then generate the map to see filtered results.
+                </p>
+                <div class="mapping-controls">
+                    <div class="map-type-selector">
+                        <label for="map-type-select">Map Type:</label>
+                        <select id="map-type-select" class="map-config-select">
+                            <option value="sales">Sales by Location</option>
+                            <option value="customers">Customer Distribution</option>
+                            <option value="deliveries">Delivery Routes</option>
+                            <option value="profit">Profit by Region</option>
+                        </select>
+                    </div>
+                    <div class="map-date-filters">
+                        <label for="map-date-start">Date From:</label>
+                        <input type="date" id="map-date-start" class="map-date-input" title="Filter map data from this date">
+                        <label for="map-date-end">Date To:</label>
+                        <input type="date" id="map-date-end" class="map-date-input" title="Filter map data to this date">
+                    </div>
+                    <div class="map-product-filter">
+                        <label for="map-product-select">Product Filter:</label>
+                        <select id="map-product-select" class="map-config-select">
+                            <option value="">All Products</option>
+                        </select>
+                    </div>
+                    <button id="generate-map-btn" class="generate-map-btn" title="Generate Location Map">
+                        <i class="fas fa-map-marked-alt"></i>
+                        Generate Map
+                    </button>
+                </div>
+                <div class="map-container" id="map-container" style="display: none;">
+                    <div id="location-map" class="location-map"></div>
+                </div>
+                <div class="location-stats" id="location-stats" style="display: none;">
+                    <h4>Location Statistics</h4>
+                    <div class="stats-grid" id="location-stats-grid">
+                        <!-- Dynamic content -->
+                    </div>
+                </div>
+            </div>
+
             <!-- Chart Builder -->
             <div class="chart-builder-section">
                 <h3>Custom Chart Builder</h3>
+                <p class="filter-instructions">
+                    <i class="fas fa-info-circle"></i>
+                    <strong>Chart Builder:</strong> Select a dataset, choose chart type and fields, then create your custom visualization.
+                </p>
                 <div class="chart-builder-controls">
+                    <div class="chart-config-row">
+                        <label for="chart-data-select">Data Source:</label>
+                        <select id="chart-data-select" class="chart-config-select">
+                            <option value="">Select Dataset...</option>
+                        </select>
+                    </div>
                     <div class="chart-config-row">
                         <label for="chart-type-select">Chart Type:</label>
                         <select id="chart-type-select" class="chart-config-select">
@@ -962,6 +1165,63 @@
             </div>
         </section>
     </main>
+
+    <!-- Column Mapping Modal -->
+    <div id="column-mapping-modal" class="modal column-mapping-modal" style="display: none;">
+        <div class="modal-content column-mapping-content">
+            <div class="modal-header">
+                <h2><i class="fas fa-columns"></i> Column Mapping</h2>
+                <button id="column-mapping-close" class="modal-close-btn">&times;</button>
+            </div>
+
+            <div class="modal-body">
+                <div class="mapping-instructions">
+                    <p>Map your CSV columns to dashboard fields. The system has detected the following columns:</p>
+                </div>
+
+                <div class="mapping-container">
+                    <div class="csv-columns-section">
+                        <h3>Your CSV Columns</h3>
+                        <div id="csv-columns-list" class="columns-list"></div>
+                    </div>
+
+                    <div class="mapping-arrow">
+                        <i class="fas fa-arrow-right"></i>
+                    </div>
+
+                    <div class="dashboard-fields-section">
+                        <h3>Dashboard Fields</h3>
+                        <div id="dashboard-fields-list" class="fields-list"></div>
+                    </div>
+                </div>
+
+                <div class="mapping-preview">
+                    <h3>Data Preview</h3>
+                    <div id="mapping-preview-table" class="preview-table"></div>
+                </div>
+
+                <div class="mapping-templates">
+                    <h3>Quick Templates</h3>
+                    <div class="template-buttons">
+                        <button id="auto-detect-mapping" class="template-btn">
+                            <i class="fas fa-magic"></i> Auto-Detect
+                        </button>
+                        <button id="save-mapping-template" class="template-btn">
+                            <i class="fas fa-save"></i> Save Template
+                        </button>
+                        <button id="load-mapping-template" class="template-btn">
+                            <i class="fas fa-folder-open"></i> Load Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button id="cancel-mapping" class="btn-secondary">Cancel</button>
+                <button id="apply-mapping" class="btn-primary">Apply Mapping & Import</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Loading Overlay -->
     <div class="loading-overlay" id="loading-overlay">
