@@ -140,10 +140,10 @@
                             <label for="csv-file" class="csv-upload-label">
                                 <i class="fas fa-upload"></i>
                                 📁 Upload CSV Data:
-                                <span class="filter-description">Upload your fuel data CSV files (Data, Recap-data, Data-gp-2024, Data-gp-2025)</span>
+                                <span class="filter-description">Upload your fuel data CSV files</span>
                             </label>
                             <input type="file" id="csv-file" accept=".csv" class="csv-input" title="Select CSV file to upload">
-                            <input type="text" id="dataset-name" class="dataset-name-input" placeholder="Dataset name (e.g., Data, Recap-data)" title="Enter a name for this dataset">
+                            <input type="text" id="dataset-name" class="dataset-name-input" placeholder="Dataset name (optional)" title="Enter a name for this dataset">
                             <button id="upload-csv" class="upload-csv-btn" title="Upload and Process CSV File">
                                 <i class="fas fa-cloud-upload-alt"></i>
                                 Upload CSV
@@ -162,19 +162,7 @@
                         </div>
                     </div>
 
-                    <!-- Data Source Selector -->
-                    <div class="sheet-selector-container">
-                        <label for="sheet-selector" class="sheet-label">
-                            <i class="fas fa-table"></i>
-                            Data Source:
-                        </label>
-                        <select id="sheet-selector" class="sheet-selector" title="Select Data Source">
-                            <option value="Data">Current Data</option>
-                            <option value="Data-gp-2025">2025 Data</option>
-                            <option value="Data-gp-2024">2024 Data</option>
-                            <option value="Recap-data">Summary Data</option>
-                        </select>
-                    </div>
+
                 </div>
 
                 <!-- Filters Section -->
@@ -236,9 +224,7 @@
                     <button class="refresh-btn" id="refresh-btn" title="Refresh Data">
                         <i class="fas fa-sync-alt"></i>
                     </button>
-                    <button class="test-btn" id="test-btn" title="Test Data Source Dropdown">
-                        <i class="fas fa-vial"></i>
-                    </button>
+
                 </div>
 
                 <!-- Status Section -->
@@ -1010,9 +996,6 @@
             console.log('Chart.js loaded successfully');
         }
     </script>
-    <script src="env-config.js"></script>
-    <script src="database-data-service.js" onerror="console.log('Database service not available, using CSV mode')"></script>
-    <script src="data-service.js" onerror="console.error('Failed to load data-service.js')"></script>
     <script src="chart-manager.js" onerror="console.error('Failed to load chart-manager.js')"></script>
     <script src="theme-manager.js" onerror="console.error('Failed to load theme-manager.js')"></script>
     <script src="dashboard.js" onerror="console.error('Failed to load dashboard.js')"></script>

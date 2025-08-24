@@ -1,0 +1,96 @@
+# True North Data Strategies - Specialized Agent Development Rules
+
+## CRITICAL: Always Read First
+
+- Always read memory-bank/architecture.md before writing any code. Include entire database schema
+- Always read memory-bank/implementation-plan.md before writing any code
+- After adding a major feature or completing a milestone, update memory-bank/architecture.md
+- Always read the README.md file first and make updates with checkmarks as we complete tasks and steps
+- Never move on to next step without asking first
+- Never edit .env files or dot files without explicit permission
+
+## Agent Development Principles
+
+- Follow the "One Job, Done Perfectly" principle - focused agents beat bloated approaches
+- Use schema-based extraction for 85-95% accuracy vs 60-80% traditional approaches
+- Implement deterministic validation with code, not LLM inference
+- Build for the "Agent Goldilocks Zone" - not too rigid, not too free
+
+## Code Style & Structure
+
+- Write enterprise-grade code that SMBs can understand and modify
+- Include comprehensive logging and error handling
+- Document business logic clearly with comments
+- Create modular, reusable components
+- Always include progress logging: Logger.log() or print statements for testing
+
+## Development Workflow
+
+- Stage 1: Concept to Sketch - Business analysis and agent specialization
+- Stage 2: Scaffold & Repo Setup - Project structure and documentation
+- Stage 3: Frontend First Vibe Coding - Claude Desktop agent development
+- Stage 4: Backend Bootstrapping - MCP server and infrastructure
+- Stage 5: Realtime Data Integration - Live system connections
+- Stage 6: Automation & AI Layering - Autonomous operation setup
+- Stage 7: Deploy and Iterate - Production deployment and training
+- Stage 8: Save, Document, Zip It - Complete package delivery
+
+## Claude Desktop Integration
+
+- Each agent is a Claude Desktop project with specialized instructions
+- Use Opus 4 for complex document processing, Sonnet 4 for general tasks
+- Implement multi-artifact strategy for large document processing
+- Create schema-based knowledge bases for extraction accuracy
+
+## MCP Server Development
+
+- Build custom MCP servers using Claude Code systematic approach
+- Implement proper authentication and security measures
+- Create specialized tools for specific business functions
+- Ensure robust error handling and retry mechanisms
+
+## Documentation Standards
+
+- Update memory-bank/progress.md after each completed milestone
+- Document all architecture decisions in memory-bank/architecture.md
+- Keep memory-bank/README.md current with development progress
+- Create user-friendly documentation for client handoff
+
+## Testing & Validation
+
+- Test with real client data, not synthetic examples
+- Validate accuracy against defined success metrics
+- Implement human-in-the-loop workflows for edge cases
+- Create monitoring dashboards for production operations
+
+## Client-Centric Approach
+
+- Build for "Super Analysts" - business experts who will own the agents
+- Create intuitive interfaces that don't require technical expertise
+- Focus on immediate ROI and measurable business value
+- Plan for autonomous operation with minimal oversight
+
+## Security & Compliance
+
+- Implement proper authentication and authorization
+- Ensure data encryption at rest and in transit
+- Create audit trails for all agent operations
+- Follow client-specific compliance requirements
+
+## Never Do This
+
+- Don't build mega-agents that try to do everything
+- Don't use complex frameworks when simple solutions work
+- Don't proceed without validating business value first
+- Don't deploy without proper monitoring and rollback procedures
+- Don't edit configuration files without explicit permission
+
+## Markdown Linting & Formatting
+
+- All markdown files in memory-bank must comply with markdown lint rules
+- Headings (H1, H2, H3, etc.) must be surrounded by blank lines (MD022)
+- Lists must be surrounded by blank lines (MD032)
+- Prefer fenced code blocks (```language) over indented blocks
+- Line length should be <= 120 chars unless readability is hurt (MD013 relaxed)
+- Add exceptions in .markdownlint.json if rules conflict with business readability
+- Rules are for clarity, not pedantry: prioritize human readability over rigid compliance

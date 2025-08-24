@@ -5,8 +5,6 @@
 
 class ChiefDashboard {
   constructor() {
-    this.dataService = null;
-    this.databaseService = null; // Railway database service
     this.chartManager = null;
     this.themeManager = null;
     this.currentData = null;
@@ -29,9 +27,6 @@ class ChiefDashboard {
       this.setupGlobalErrorHandlers();
 
       // Initialize services
-      this.databaseService = new DatabaseDataService(); // Railway database service
-      this.dataService = new ChiefDataService(); // Google Sheets fallback
-      this.dataService.dashboard = this; // Reference for filtered data access
       this.chartManager = new ChiefChartManager();
 
       // Store reference for theme manager to access
@@ -81,17 +76,7 @@ class ChiefDashboard {
       });
     }
 
-    // Data source selector (restored functionality)
-    const sheetSelector = document.getElementById('sheet-selector');
-    if (sheetSelector) {
-      console.log('📊 Data source dropdown found, adding event listener');
-      sheetSelector.addEventListener('change', (e) => {
-        console.log('📊 Data source changed to:', e.target.value);
-        this.switchDataSource(e.target.value);
-      });
-    } else {
-      console.error('❌ Data source dropdown not found!');
-    }
+    // Data source dropdown removed - CSV upload only mode
 
     // Time period selector
     const timePeriodSelect = document.getElementById('time-period');
@@ -197,18 +182,7 @@ class ChiefDashboard {
     // Navigation dropdown event listeners
     this.setupNavigationDropdown();
 
-    // Test button (for development/debugging)
-    const testBtn = document.getElementById('test-btn');
-    if (testBtn) {
-      testBtn.addEventListener('click', () => {
-        this.testDataSourceDropdown();
-      });
-
-      // Always show test button for debugging
-      testBtn.style.display = 'inline-block';
-      testBtn.innerHTML = '<i class="fas fa-vial"></i> Test Dropdown';
-      testBtn.title = 'Test Data Source Dropdown';
-    }
+    // Test button removed - CSV upload only mode
 
     // Data explorer event listeners
     const viewHeadersBtn = document.getElementById('view-headers-btn');
@@ -279,154 +253,106 @@ class ChiefDashboard {
   }
 
   /**
-   * Load dashboard data
+   * Load dashboard data - CSV Upload Only Mode
    */
   async loadDashboardData() {
     try {
-      this.showLoading('Loading Chief Petroleum data...');
+      console.log('🚀 Initializing Chief Petroleum Dashboard (CSV Upload Mode)...');
 
-      // Load data from Railway database only
-      console.log('🚀 Loading data from Railway database...');
+      // Check if we have any uploaded datasets
+      if (Object.keys(this.uploadedDatasets).length > 0) {
+        // Use the most recently uploaded dataset
+        const datasetNames = Object.keys(this.uploadedDatasets);
+        const latestDataset = datasetNames[datasetNames.length - 1];
+        this.currentData = this.uploadedDatasets[latestDataset];
+        this.currentDataset = latestDataset;
 
-      // Test Railway connection first
-      const healthCheck = await this.databaseService.healthCheck();
-      console.log('🔍 Railway health check result:', healthCheck);
+        console.log(`📊 Using uploaded dataset: ${latestDataset}`);
+        this.showNotification(`Loaded dataset: ${latestDataset}`, 'success');
 
-      if (!healthCheck) {
-        throw new Error('Railway health check failed - database is not available');
-      }
-
-      this.currentData = await this.loadFromDatabase();
-      console.log('✅ Database data loaded successfully');
-      this.showNotification('Connected to Railway database', 'success');
-
-      console.log('📊 Data loaded:', this.currentData.summary);
-
-      // Update all dashboard components
-      this.updateKPIs();
-      this.updateCharts();
-      this.updateDataTable();
-      this.updateLastUpdated();
-
-      // Initialize data source dropdown
-      this.initializeDataSourceDropdown();
-
-      // Load GP charts
-      this.loadGPCharts();
-
-      // Auto-load recap data for 2 business days ago
-      console.log('🔄 Auto-loading daily recap...');
-      await this.loadDailyRecap();
-
-      this.hideLoading();
-      
-    } catch (error) {
-      this.hideLoading();
-      console.error('❌ Dashboard data loading failed:', error);
-
-      // Provide specific error messages based on error type
-      let userMessage = 'Failed to load dashboard data';
-      if (error.message.includes('health check failed')) {
-        userMessage = 'Cannot connect to database. Please check your internet connection and try again.';
-      } else if (error.message.includes('fetch')) {
-        userMessage = 'Network error while loading data. Please try refreshing the page.';
+        // Update all dashboard components
+        this.updateKPIs();
+        this.updateCharts();
+        this.updateDataTable();
+        this.updateLastUpdated();
+        this.updateDatasetSwitcher(latestDataset);
       } else {
-        userMessage = `Failed to load data: ${error.message}`;
+        // No data uploaded yet - show empty state
+        console.log('📋 No data uploaded yet - showing empty dashboard');
+        this.showEmptyState();
       }
 
-      this.showNotification(userMessage, 'error');
-      throw error;
-    }
-  }
+      console.log('✅ Dashboard initialized successfully');
 
-  /**
-   * Load data from Railway database
-   */
-  async loadFromDatabase() {
-    try {
-      // Fetch KPIs and transaction data from Railway API
-      const [kpis, transactions, recapData] = await Promise.all([
-        this.databaseService.getKPIs(),
-        this.databaseService.getTransactions({ limit: 1000 }),
-        this.databaseService.getRecapData({ limit: 100 })
-      ]);
-
-      // Transform database data to match expected format
-      const transactionData = transactions.data || [];
-
-      // Process dates in transaction data
-      const processedTransactionData = transactionData.map(record => {
-        const processedRecord = { ...record };
-
-        // Normalize all date fields using the utility function
-        Object.keys(processedRecord).forEach(key => {
-          if (key.toLowerCase().includes('date') || processedRecord[key] instanceof Date) {
-            processedRecord[key] = this.normalizeDate(processedRecord[key]);
-          }
-        });
-
-        return processedRecord;
-      });
-
-      const transformedData = {
-        records: processedTransactionData,        // For compatibility with CSV/Sheets code
-        transactions: processedTransactionData,   // For Railway-specific code
-        summary: {
-          totalRecords: parseInt(kpis.total_transactions) || 0,
-          totalSales: parseFloat(kpis.total_sales) || 0,
-          totalGallons: parseFloat(kpis.total_gallons) || 0,
-          totalProfit: parseFloat(kpis.total_profit) || 0,
-          avgProfitMargin: parseFloat(kpis.avg_margin) || 0,  // Use consistent field name
-          avgMargin: parseFloat(kpis.avg_margin) || 0,
-          activeCustomers: parseInt(kpis.active_customers) || 0,
-          dateRange: {
-            start: kpis.earliest_date,
-            end: kpis.latest_date
-          }
-        },
-        recapData: recapData.data || [],
-        source: 'Railway Database',  // Use consistent field name
-        dataSource: 'Railway Database',
-        lastUpdated: new Date().toISOString()
-      };
-
-      return transformedData;
     } catch (error) {
-      console.error('❌ Database loading failed:', error);
-      throw new Error(`Database loading failed: ${error.message}`);
+      console.error('❌ Dashboard initialization failed:', error);
+      this.showNotification('Failed to initialize dashboard: ' + error.message, 'error');
     }
   }
 
   /**
-   * Refresh data
+   * Show empty state when no data is uploaded
+   */
+  showEmptyState() {
+    // Clear all dashboard components
+    this.currentData = null;
+
+    // Show empty KPIs
+    this.updateKPIs();
+
+    // Clear charts
+    if (this.chartManager) {
+      this.chartManager.clearAllCharts();
+    }
+
+    // Clear data table
+    this.updateDataTable();
+
+    // Show helpful message
+    this.showNotification('Welcome! Please upload a CSV file to get started.', 'info');
+
+    console.log('📋 Empty state displayed - ready for CSV upload');
+  }
+
+
+
+  /**
+   * Refresh data - CSV Upload Mode
    */
   async refreshData(silent = false) {
     if (this.isLoading) return;
-    
+
     try {
       if (!silent) {
-        this.showLoading('Refreshing data...');
+        this.showLoading('Refreshing dashboard...');
       }
-      
-      // Clear cache to force fresh data
-      this.dataService.clearCache();
-      
-      // Reload data
-      await this.loadDashboardData();
-      
-      if (!silent) {
-        this.showNotification('Data refreshed successfully!');
+
+      // Refresh current dataset if available
+      if (this.currentData && this.currentDataset) {
+        // Update all dashboard components with current data
+        this.updateKPIs();
+        this.updateCharts();
+        this.updateDataTable();
+        this.updateLastUpdated();
+
+        if (!silent) {
+          this.showNotification('Dashboard refreshed successfully!');
+        }
+      } else {
+        // No data available - show empty state
+        this.showEmptyState();
+        if (!silent) {
+          this.showNotification('No data to refresh. Please upload a CSV file.', 'info');
+        }
       }
-      
+
     } catch (error) {
       console.error('❌ Refresh failed:', error);
       if (!silent) {
-        this.showError('Failed to refresh data: ' + error.message);
+        this.showError('Failed to refresh dashboard: ' + error.message);
       }
     }
   }
-
-  // Note: Sheet switching functionality removed - using Railway database only
 
   /**
    * Update KPI cards
@@ -437,13 +363,13 @@ class ChiefDashboard {
     // Use filtered data if date filter is active
     const dataToUse = this.getFilteredData() || this.currentData;
     const summary = dataToUse.summary;
-    
+
     // Update KPI values
     this.updateKPI('total-sales', summary.totalSales, 'currency');
     this.updateKPI('total-gallons', summary.totalGallons, 'number');
     this.updateKPI('profit-margin', summary.avgProfitMargin, 'percent');
     this.updateKPI('active-customers', summary.activeCustomers, 'number');
-    
+
     // Update change indicators (you could calculate vs previous period)
     this.updateKPIChange('sales-change', 0); // Placeholder - implement trend calculation
     this.updateKPIChange('gallons-change', 0);
@@ -457,9 +383,9 @@ class ChiefDashboard {
   updateKPI(elementId, value, format) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     let formattedValue;
-    
+
     switch (format) {
       case 'currency':
         formattedValue = new Intl.NumberFormat('en-US', {
@@ -478,9 +404,9 @@ class ChiefDashboard {
       default:
         formattedValue = value || 0;
     }
-    
+
     element.textContent = formattedValue;
-    
+
     // Add animation effect
     element.style.transform = 'scale(1.05)';
     setTimeout(() => {
@@ -494,10 +420,10 @@ class ChiefDashboard {
   updateKPIChange(elementId, changePercent) {
     const element = document.getElementById(elementId);
     if (!element) return;
-    
+
     const isPositive = changePercent >= 0;
     const formattedChange = (changePercent >= 0 ? '+' : '') + changePercent.toFixed(1) + '%';
-    
+
     element.textContent = formattedChange;
     element.className = 'kpi-change ' + (isPositive ? 'positive' : 'negative');
   }
@@ -514,53 +440,32 @@ class ChiefDashboard {
     try {
       console.log('📈 Updating charts...');
 
-    // Determine data source and use appropriate service
-    const isCSVData = this.currentData.source && this.currentData.source.includes('CSV Upload');
-
-    if (isCSVData) {
-      // For CSV data, pass the data directly
-      console.log('📊 Using CSV data for charts');
-      await this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
-      this.chartManager.createCustomerChart(this.currentData);
-      this.chartManager.createProfitChart(this.currentData);
-    } else {
-      // For Railway database data, pass the database service
-      console.log('📊 Using Railway database service for charts');
-      await this.chartManager.createSalesTrendChart(this.databaseService, this.currentPeriod);
-      this.chartManager.createCustomerChart(this.databaseService);
-      this.chartManager.createProfitChart(this.databaseService);
-    }
-
-    // Update product chart with current filter
-    const productFilter = document.getElementById('product-filter')?.value || 'all';
-    this.updateProductChart(productFilter);
-
-    // Force chart resize after creation
-    setTimeout(() => {
-      if (this.chartManager) {
-        this.chartManager.resizeAllCharts();
+      // Determine data source and use appropriate service
+      // Create charts using CSV data only
+      if (this.currentData && this.currentData.records) {
+        console.log('📊 Using CSV data for charts');
+        await this.chartManager.createSalesTrendChart(this.currentData, this.currentPeriod);
+        this.chartManager.createCustomerChart(this.currentData);
+        this.chartManager.createProfitChart(this.currentData);
+      } else {
+        console.log('📊 No data available for charts');
       }
-    }, 100);
 
-    // Always show advanced charts for CSV data
-    if (isCSVData) {
-      await this.showCSVCharts();
-    } else {
-      // Hide all advanced charts initially for Google Sheets
-      this.hideAllAdvancedCharts();
+      // Update product chart with current filter
+      const productFilter = document.getElementById('product-filter')?.value || 'all';
+      this.updateProductChart(productFilter);
 
-      // Show sheet-specific charts
-      const currentSheet = this.dataService.getCurrentSheet();
-      const sheetType = this.dataService.getSheetInfo(currentSheet)?.type;
+      // Force chart resize after creation
+      setTimeout(() => {
+        if (this.chartManager) {
+          this.chartManager.resizeAllCharts();
+        }
+      }, 100);
 
-      if (sheetType === 'yearly' || currentSheet.includes('2024') || currentSheet.includes('2025')) {
-        await this.showYearlyCharts(currentSheet);
-      } else if (sheetType === 'summary' || currentSheet === 'Recap-data') {
-        await this.showSummaryCharts();
-      } else if (currentSheet === 'Data') {
-        await this.showTransactionalCharts();
+      // Show CSV charts if data is available
+      if (this.currentData && this.currentData.records) {
+        await this.showCSVCharts();
       }
-    }
 
     } catch (error) {
       console.error('❌ Error updating charts:', error);
@@ -885,9 +790,9 @@ class ChiefDashboard {
     // Add any other important columns not in priority list
     availableColumns.forEach(col => {
       if (!priorityColumns.find(p => p.key === col) &&
-          !col.toLowerCase().includes('id') &&
-          col !== 'ProfitMargin' &&
-          col !== 'RevenuePerGallon') {
+        !col.toLowerCase().includes('id') &&
+        col !== 'ProfitMargin' &&
+        col !== 'RevenuePerGallon') {
         columnsToShow.push({ key: col, display: col });
       }
     });
@@ -920,10 +825,10 @@ class ChiefDashboard {
       if (columnKey === 'Date') {
         return new Date(value).toLocaleDateString('en-US');
       } else if (columnKey.toLowerCase().includes('sales') ||
-                 columnKey.toLowerCase().includes('profit') ||
-                 columnKey.toLowerCase().includes('fee') ||
-                 columnKey.toLowerCase().includes('total') ||
-                 columnKey.toLowerCase().includes('cost')) {
+        columnKey.toLowerCase().includes('profit') ||
+        columnKey.toLowerCase().includes('fee') ||
+        columnKey.toLowerCase().includes('total') ||
+        columnKey.toLowerCase().includes('cost')) {
         const numValue = Number(value);
         if (isNaN(numValue)) return '$0.00';
         return new Intl.NumberFormat('en-US', {
@@ -931,8 +836,8 @@ class ChiefDashboard {
           currency: 'USD'
         }).format(numValue);
       } else if (columnKey.toLowerCase().includes('gallon') ||
-                 columnKey.toLowerCase().includes('qty') ||
-                 columnKey.toLowerCase().includes('quantity')) {
+        columnKey.toLowerCase().includes('qty') ||
+        columnKey.toLowerCase().includes('quantity')) {
         const numValue = Number(value);
         if (isNaN(numValue)) return '0';
         return numValue.toLocaleString();
@@ -1023,14 +928,14 @@ class ChiefDashboard {
       }
 
       let csvContent = headers.join(',') + '\n';
-      
+
       records.forEach(record => {
         const row = headers.map(header => {
           let value = record[header] || '';
 
           // Normalize dates using the new utility function
           if (header.toLowerCase().includes('date') || value instanceof Date ||
-              (typeof value === 'string' && value.startsWith('Date('))) {
+            (typeof value === 'string' && value.startsWith('Date('))) {
             value = this.normalizeDate(value);
           }
 
@@ -1045,11 +950,11 @@ class ChiefDashboard {
         });
         csvContent += row.join(',') + '\n';
       });
-      
+
       // Create and download file
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const link = document.createElement('a');
-      
+
       if (link.download !== undefined) {
         const url = URL.createObjectURL(blob);
         link.setAttribute('href', url);
@@ -1058,10 +963,10 @@ class ChiefDashboard {
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
-        
+
         this.showNotification('Data exported successfully!');
       }
-      
+
     } catch (error) {
       console.error('❌ Export failed:', error);
       this.showError('Failed to export data: ' + error.message);
@@ -1122,65 +1027,7 @@ class ChiefDashboard {
     }
   }
 
-  /**
-   * Switch data source based on dropdown selection
-   */
-  async switchDataSource(dataSource) {
-    if (this.isLoading) return;
 
-    try {
-      this.showLoading(`Loading ${dataSource}...`);
-      console.log(`🔄 Switching to data source: ${dataSource}`);
-
-      // Map dropdown values to data types
-      let dataType;
-      switch (dataSource) {
-        case 'Data':
-          dataType = 'transactions';
-          break;
-        case 'Data-gp-2025':
-          dataType = 'gp-2025';
-          break;
-        case 'Data-gp-2024':
-          dataType = 'gp-2024';
-          break;
-        case 'Recap-data':
-          dataType = 'recap';
-          break;
-        default:
-          dataType = 'transactions';
-      }
-
-      // Fetch data from the appropriate source
-      const newData = await this.dataService.fetchFuelData(dataType);
-
-      if (!newData) {
-        throw new Error(`No data available for ${dataSource}`);
-      }
-
-      // Update current data
-      this.currentData = newData;
-      this.currentData.source = 'Railway Database';
-      this.currentData.dataSource = 'Railway Database';
-
-      // Update all dashboard components
-      this.updateKPIs();
-      this.updateCharts();
-      this.updateDataTable();
-      this.updateLastUpdated();
-
-      // Update data source info
-      this.updateDataSourceInfo();
-
-      this.hideLoading();
-      this.showNotification(`Switched to ${dataSource}`, 'success');
-
-    } catch (error) {
-      this.hideLoading();
-      console.error('❌ Error switching data source:', error);
-      this.showError(`Failed to switch to ${dataSource}: ${error.message}`);
-    }
-  }
 
   /**
    * Update data range information display
@@ -1449,7 +1296,7 @@ class ChiefDashboard {
   }
 
   /**
-   * Handle CSV file upload with dataset management AND Railway database upload
+   * Handle CSV file upload - Local Processing Only
    */
   async handleCSVUpload() {
     const fileInput = document.getElementById('csv-file');
@@ -1484,6 +1331,7 @@ class ChiefDashboard {
       // Store the dataset locally
       this.uploadedDatasets[datasetName] = processedData;
       this.currentData = processedData;
+      this.currentDataset = datasetName;
 
       // Update local dashboard
       this.updateDatasetSwitcher(datasetName);
@@ -1492,20 +1340,11 @@ class ChiefDashboard {
       this.updateDataTable();
       this.updateLastUpdated();
 
-      // 🚀 NEW: Also upload to Railway database
-      this.showLoading(`Uploading ${datasetName} to Railway database...`);
-      const railwayResult = await this.uploadToRailwayDatabase(processedData, datasetName);
-
       this.hideLoading();
 
-      if (railwayResult.success) {
-        this.showNotification(`Dataset "${datasetName}" uploaded successfully!
-          📊 Local: ${processedData.records.length} records
-          🚀 Railway: ${railwayResult.uploaded} records uploaded`, 'success');
-      } else {
-        this.showNotification(`Dataset "${datasetName}" uploaded locally (${processedData.records.length} records)
-          ⚠️ Railway upload failed: ${railwayResult.error}`, 'warning');
-      }
+      // Show success message
+      this.showNotification(`Dataset "${datasetName}" uploaded successfully!
+        📊 Processed ${processedData.records.length} records`, 'success');
 
       // Clear the inputs
       fileInput.value = '';
@@ -1579,124 +1418,7 @@ class ChiefDashboard {
     }
   }
 
-  /**
-   * 🚀 NEW: Upload processed data to Railway database
-   */
-  async uploadToRailwayDatabase(processedData, datasetName) {
-    const API_BASE = 'https://api-server-production-8953.up.railway.app/api';
 
-    try {
-      // Determine which table to use based on dataset name
-      let endpoint = '';
-      let tableName = '';
-
-      if (datasetName.toLowerCase().includes('recap')) {
-        endpoint = '/recap-data';
-        tableName = 'recap_data';
-      } else if (datasetName.toLowerCase().includes('gp-2024')) {
-        endpoint = '/gp-data/2024';
-        tableName = 'gp_data_2024';
-      } else if (datasetName.toLowerCase().includes('gp-2025')) {
-        endpoint = '/gp-data/2025';
-        tableName = 'gp_data_2025';
-      } else {
-        // Default to transactions table
-        endpoint = '/transactions';
-        tableName = 'transactions';
-      }
-
-      console.log(`🚀 Uploading ${processedData.records.length} records to ${tableName}...`);
-
-      let uploadedCount = 0;
-      let errorCount = 0;
-
-      // Upload in batches of 50 to avoid overwhelming the API
-      const batchSize = 50;
-      for (let i = 0; i < processedData.records.length; i += batchSize) {
-        const batch = processedData.records.slice(i, i + batchSize);
-
-        for (const record of batch) {
-          try {
-            const transformedRecord = this.transformRecordForRailway(record, tableName);
-
-            const response = await fetch(`${API_BASE}${endpoint}`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(transformedRecord)
-            });
-
-            if (response.ok) {
-              uploadedCount++;
-            } else {
-              console.error('❌ Railway upload error:', await response.text());
-              errorCount++;
-            }
-          } catch (error) {
-            console.error('❌ Error uploading record:', error);
-            errorCount++;
-          }
-        }
-
-        // Update progress
-        const progress = Math.round(((i + batchSize) / processedData.records.length) * 100);
-        this.showLoading(`Uploading to Railway: ${progress}% (${uploadedCount}/${processedData.records.length})`);
-
-        // Small delay between batches
-        await new Promise(resolve => setTimeout(resolve, 100));
-      }
-
-      return {
-        success: true,
-        uploaded: uploadedCount,
-        errors: errorCount,
-        tableName: tableName
-      };
-
-    } catch (error) {
-      console.error('❌ Railway database upload failed:', error);
-      return {
-        success: false,
-        error: error.message,
-        uploaded: 0
-      };
-    }
-  }
-
-  /**
-   * Transform record for Railway database format
-   */
-  transformRecordForRailway(record, tableName) {
-    const transformed = {};
-
-    if (tableName === 'transactions') {
-      transformed.date = this.parseCSVDate(record.Date);
-      transformed.customer = record.Customer || null;
-      transformed.customer_address = record['Customer-Address'] || null;
-      transformed.product_type = record['Product Type'] || null;
-      transformed.gallon_qty = this.parseCSVNumber(record['Gallon Qty']);
-      transformed.actual_profit = this.parseCSVNumber(record['Actual Profit By Item']);
-      transformed.actual_cost = this.parseCSVNumber(record['Actual Cost by item']);
-      transformed.sales = this.parseCSVNumber(record.Sales);
-      transformed.margin_by_product = this.parseCSVNumber(record['Margin by Product']);
-      transformed.unleaded_cost = this.parseCSVNumber(record['Unleaded cost']);
-      transformed.clear_cost = this.parseCSVNumber(record['Clear Cost']);
-      transformed.dyed_cost = this.parseCSVNumber(record['Dyed Cost']);
-    } else if (tableName === 'recap_data') {
-      transformed.date = this.parseCSVDate(record.Date);
-      transformed.driver = record.DRIVER || null;
-      transformed.company = record.COMPANY || null;
-      transformed.gallons = this.parseCSVNumber(record.GALLONS);
-      transformed.profit_includes_delivery_fee = this.parseCSVNumber(record['PROFIT INCLUDES DELIEVERY FEE']);
-      transformed.delivery_fee = this.parseCSVNumber(record['DELIVERY FEE']);
-      transformed.margin = this.parseCSVNumber(record['Margin (Greeen if includes deliver Fee)']);
-      transformed.opis_true = record['OPIS-true'] === 'TRUE';
-    }
-    // Add more table transformations as needed for GP data
-
-    return transformed;
-  }
 
   /**
    * Read CSV file content
@@ -2019,13 +1741,13 @@ class ChiefDashboard {
           return productType.includes('heating') || productType.includes('heat') || productType.includes('home');
         case 'other':
           return !productType.includes('diesel') &&
-                 !productType.includes('#2') &&
-                 !productType.includes('gasoline') &&
-                 !productType.includes('gas') &&
-                 !productType.includes('unleaded') &&
-                 !productType.includes('heating') &&
-                 !productType.includes('heat') &&
-                 !productType.includes('home');
+            !productType.includes('#2') &&
+            !productType.includes('gasoline') &&
+            !productType.includes('gas') &&
+            !productType.includes('unleaded') &&
+            !productType.includes('heating') &&
+            !productType.includes('heat') &&
+            !productType.includes('home');
         default:
           return true;
       }
@@ -2064,7 +1786,7 @@ class ChiefDashboard {
   }
 
   /**
-   * Load daily recap for selected date
+   * Load daily recap for selected date - CSV Only Mode
    */
   async loadDailyRecap() {
     const selectedDate = document.getElementById('recap-date').value;
@@ -2077,23 +1799,35 @@ class ChiefDashboard {
       console.log('📅 Loading daily recap for:', selectedDate);
       this.showLoading(`Loading daily recap for ${selectedDate}...`);
 
-      // Use the async method that queries Railway database directly
-      const dailyData = await this.dataService.getDailyRecap(selectedDate);
-
-      if (!dailyData) {
-        console.log(`📅 No data found for ${selectedDate}, trying to find alternative date`);
+      // Check if we have current data to filter by date
+      if (!this.currentData || !this.currentData.records) {
         this.hideLoading();
-        this.showNotification(`No data found for ${selectedDate}. Try selecting a different date.`, 'info');
+        this.showNotification('No data available. Please upload a CSV file first.', 'warning');
         this.hideDailyRecap();
-
-        // Suggest alternative dates with data
-        await this.suggestAlternativeRecapDates();
         return;
       }
 
+      // Filter current data by selected date
+      const dailyRecords = this.currentData.records.filter(record => {
+        const recordDate = new Date(record.Date || record.date);
+        const selectedDateObj = new Date(selectedDate);
+        return recordDate.toDateString() === selectedDateObj.toDateString();
+      });
+
+      if (dailyRecords.length === 0) {
+        console.log(`📅 No data found for ${selectedDate}`);
+        this.hideLoading();
+        this.showNotification(`No data found for ${selectedDate}. Try selecting a different date.`, 'info');
+        this.hideDailyRecap();
+        return;
+      }
+
+      // Create daily recap data structure
+      const dailyData = this.calculateDailyMetrics(dailyRecords);
+
       this.displayDailyRecap(dailyData);
       this.hideLoading();
-      this.showNotification(`Daily recap loaded for ${selectedDate}`, 'success');
+      this.showNotification(`Daily recap loaded for ${selectedDate} (${dailyRecords.length} records)`, 'success');
 
     } catch (error) {
       console.error('❌ Error loading daily recap:', error);
@@ -2188,7 +1922,7 @@ class ChiefDashboard {
 
     // Sort customers by sales
     const sortedCustomers = Object.entries(customerBreakdown)
-      .sort(([,a], [,b]) => b.sales - a.sales)
+      .sort(([, a], [, b]) => b.sales - a.sales)
       .slice(0, 10); // Top 10 customers
 
     sortedCustomers.forEach(([customer, data]) => {
@@ -2931,7 +2665,7 @@ class ChiefDashboard {
           y: {
             ticks: {
               color: '#ffffff',
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             },
@@ -3039,7 +2773,7 @@ class ChiefDashboard {
             position: 'left',
             ticks: {
               color: '#ffffff',
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             },
@@ -3051,7 +2785,7 @@ class ChiefDashboard {
             position: 'right',
             ticks: {
               color: '#ffffff',
-              callback: function(value) {
+              callback: function (value) {
                 return '$' + value.toLocaleString();
               }
             },
@@ -3129,39 +2863,7 @@ class ChiefDashboard {
     }
   }
 
-  /**
-   * Test data source dropdown functionality
-   */
-  async testDataSourceDropdown() {
-    console.log('🧪 Testing data source dropdown...');
 
-    const sheetSelector = document.getElementById('sheet-selector');
-    if (!sheetSelector) {
-      console.error('❌ Data source dropdown not found!');
-      this.showNotification('Data source dropdown not found!', 'error');
-      return;
-    }
-
-    console.log('✅ Data source dropdown found');
-    console.log('📊 Current value:', sheetSelector.value);
-    console.log('📊 Available options:', Array.from(sheetSelector.options).map(opt => opt.value));
-
-    // Test switching to different data sources
-    const testSources = ['Data', 'Data-gp-2025', 'Data-gp-2024', 'Recap-data'];
-
-    for (const source of testSources) {
-      console.log(`🔄 Testing switch to: ${source}`);
-      try {
-        await this.switchDataSource(source);
-        console.log(`✅ Successfully switched to: ${source}`);
-        await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second between tests
-      } catch (error) {
-        console.error(`❌ Failed to switch to ${source}:`, error);
-      }
-    }
-
-    this.showNotification('Data source dropdown test completed - check console for results', 'info');
-  }
 
   /**
    * Process and normalize date values for consistent formatting
@@ -3217,43 +2919,7 @@ class ChiefDashboard {
     return String(dateValue);
   }
 
-  /**
-   * Test Railway database connection
-   */
-  async testRailwayConnection() {
-    console.log('🧪 Testing Railway database connection...');
 
-    try {
-      // Test 1: Health check
-      console.log('1️⃣ Testing health endpoint...');
-      const healthCheck = await this.databaseService.healthCheck();
-      console.log('Health check result:', healthCheck);
-
-      if (!healthCheck) {
-        throw new Error('Health check failed');
-      }
-
-      // Test 2: KPIs endpoint
-      console.log('2️⃣ Testing KPIs endpoint...');
-      const kpis = await this.databaseService.getKPIs();
-      console.log('KPIs result:', kpis);
-
-      // Test 3: Transactions endpoint
-      console.log('3️⃣ Testing transactions endpoint...');
-      const transactions = await this.databaseService.getTransactions({ limit: 5 });
-      console.log('Transactions result:', transactions);
-
-      // Test 4: Reload dashboard data
-      console.log('4️⃣ Reloading dashboard data...');
-      await this.loadDashboardData();
-
-      this.showNotification('✅ Railway connection test successful!', 'success');
-
-    } catch (error) {
-      console.error('❌ Railway connection test failed:', error);
-      this.showNotification(`❌ Railway test failed: ${error.message}`, 'error');
-    }
-  }
 
   /**
    * Run comprehensive dashboard tests
