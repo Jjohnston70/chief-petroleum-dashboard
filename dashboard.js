@@ -1457,6 +1457,7 @@ class ChiefDashboard {
     const modal = document.getElementById('column-mapping-modal');
     const closeBtn = document.getElementById('column-mapping-close');
     const cancelBtn = document.getElementById('cancel-mapping');
+    const backBtn = document.getElementById('back-to-upload');
     const applyBtn = document.getElementById('apply-mapping');
     const autoDetectBtn = document.getElementById('auto-detect-mapping');
 
@@ -1466,6 +1467,10 @@ class ChiefDashboard {
 
     if (cancelBtn) {
       cancelBtn.addEventListener('click', () => this.hideColumnMappingModal());
+    }
+
+    if (backBtn) {
+      backBtn.addEventListener('click', () => this.goBackToUpload());
     }
 
     if (applyBtn) {
@@ -1560,12 +1565,45 @@ class ChiefDashboard {
   }
 
   /**
-   * Update upload button state
+   * Update upload button state and drag-drop zone
    */
   updateUploadButton() {
     const uploadBtn = document.getElementById('upload-csv');
+    const dragDropZone = document.getElementById('drag-drop-zone');
+
     if (uploadBtn) {
       uploadBtn.disabled = this.selectedFiles.length === 0;
+    }
+
+    // Update drag-drop zone appearance based on file selection
+    if (dragDropZone) {
+      if (this.selectedFiles.length > 0) {
+        dragDropZone.classList.add('has-files');
+        const content = dragDropZone.querySelector('.drag-drop-content');
+        if (content) {
+          content.innerHTML = `
+            <i class="fas fa-check-circle drag-drop-icon" style="color: var(--chief-success, #10b981);"></i>
+            <h3>${this.selectedFiles.length} file(s) selected</h3>
+            <p>Click "Upload CSV" to proceed with column mapping</p>
+            <div class="supported-formats">
+              <span>Ready to process</span>
+            </div>
+          `;
+        }
+      } else {
+        dragDropZone.classList.remove('has-files');
+        const content = dragDropZone.querySelector('.drag-drop-content');
+        if (content) {
+          content.innerHTML = `
+            <i class="fas fa-cloud-upload-alt drag-drop-icon"></i>
+            <h3>Drag & Drop CSV Files Here</h3>
+            <p>or click to browse files</p>
+            <div class="supported-formats">
+              <span>Supports: CSV, Excel (.xlsx, .xls) files</span>
+            </div>
+          `;
+        }
+      }
     }
   }
 
@@ -2733,6 +2771,37 @@ class ChiefDashboard {
     }
     this.pendingUpload = null;
     this.columnMappings = {};
+
+    // Reset flags
+    this.isRecapUpload = false;
+    this.recapDatasetName = null;
+  }
+
+  /**
+   * Go back to upload interface from column mapping
+   */
+  goBackToUpload() {
+    this.hideColumnMappingModal();
+
+    // If this was a recap upload, restore the recap file selection
+    if (this.isRecapUpload && this.pendingUpload) {
+      const fileInput = document.getElementById('recap-csv-file');
+      if (fileInput) {
+        // Create a new FileList with the pending file
+        const dt = new DataTransfer();
+        dt.items.add(this.pendingUpload.file);
+        fileInput.files = dt.files;
+      }
+      this.showNotification('Returned to recap upload. You can select a different file or try mapping again.', 'info');
+    } else {
+      // For regular uploads, restore the selected files
+      if (this.pendingUpload) {
+        this.selectedFiles = [this.pendingUpload.file];
+        this.updateFileList();
+        this.updateUploadButton();
+      }
+      this.showNotification('Returned to file upload. You can select different files or try mapping again.', 'info');
+    }
   }
 
   /**
@@ -2897,10 +2966,22 @@ class ChiefDashboard {
         statusElement.innerHTML = `
           <i class="fas fa-check-circle" style="color: var(--chief-success, #10b981);"></i>
           <small>${csvColumn}</small>
-          <button class="remove-mapping-btn" onclick="dashboard.removeColumnMapping('${csvColumn}', '${dashboardField}')" title="Remove mapping">
+          <button class="remove-mapping-btn" data-csv-column="${csvColumn}" data-dashboard-field="${dashboardField}" title="Remove mapping">
             <i class="fas fa-times"></i>
           </button>
         `;
+
+        // Add event listener to the remove button
+        const removeBtn = statusElement.querySelector('.remove-mapping-btn');
+        if (removeBtn) {
+          removeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const csvCol = removeBtn.dataset.csvColumn;
+            const dashField = removeBtn.dataset.dashboardField;
+            this.removeColumnMapping(csvCol, dashField);
+          });
+        }
       }
     });
   }

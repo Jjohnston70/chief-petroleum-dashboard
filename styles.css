@@ -1408,7 +1408,7 @@ body {
 /* Enhanced Drag & Drop Upload Styles */
 .drag-drop-zone {
   position: relative;
-  border: 2px dashed var(--border-color);
+  border: 2px dashed var(--chief-primary);
   border-radius: 12px;
   padding: 2rem;
   text-align: center;
@@ -1416,6 +1416,10 @@ body {
   transition: all 0.3s ease;
   cursor: pointer;
   margin-bottom: 1rem;
+  min-height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .drag-drop-zone:hover {
@@ -1429,8 +1433,15 @@ body {
   transform: scale(1.02);
 }
 
+.drag-drop-zone.has-files {
+  border-color: var(--chief-success, #10b981);
+  background: rgba(16, 185, 129, 0.1);
+  border-style: solid;
+}
+
 .drag-drop-content {
   pointer-events: none;
+  width: 100%;
 }
 
 .drag-drop-icon {
@@ -2361,9 +2372,16 @@ body {
 }
 
 .modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
   padding: 1.5rem;
   border-top: 1px solid var(--border-color);
-  text-align: right;
+}
+
+.modal-footer #back-to-upload {
+  margin-right: auto;
 }
 
 .btn-retry {
